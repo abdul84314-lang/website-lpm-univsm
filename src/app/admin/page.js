@@ -75,110 +75,120 @@ const tabConfig = {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('Profil'); // Default ke tab profil
+  const [activeTab, setActiveTab] = useState('Beranda');
   const [data, setData] = useState([]);
   const [formData, setFormData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // =========================================================================
-  // GANTI URL DI BAWAH INI SAMA DENGAN URL DI FILE page.js (HALAMAN PUBLIK)
-  // =========================================================================
-  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIY6jG3Bd4uPcCkTflrqephpg5Pe4dfP13_jp24pUG6gEin4nXsEkiip0tNt4mqvLJZQ/exec";
-
   useEffect(() => {
     fetchData();
   }, [activeTab]);
 
+  // ==========================================
+  // 1. FUNGSI READ (MENGAMBIL DATA)
+  // ==========================================
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // JIKA TAB ADALAH PROFIL, KITA AMBIL DARI SPREADSHEET
-      if (activeTab === 'Profil' && GOOGLE_SCRIPT_URL) {
-        const response = await fetch(GOOGLE_SCRIPT_URL);
-        const result = await response.json();
+      // Memanggil API internal Next.js (contoh: /api/berita)
+      const endpoint = `/api/${activeTab.toLowerCase()}`;
+      const response = await fetch(endpoint);
+      const result = await response.json();
+      
+      if (tabConfig[activeTab].type === 'single') {
         setFormData(result || {});
       } else {
-        // Untuk tab lain yang menggunakan route API lokal Next.js (/api/...)
-        const endpoint = `/api/${activeTab.toLowerCase()}`;
-        // Simulasi data kosong agar tidak error jika API lokal belum dibuat
-        const json = []; 
-        
-        if (tabConfig[activeTab].type === 'single') {
-          setFormData(json[0] || {});
-        } else {
-          setData(json || []);
-        }
+        // Pastikan result berbentuk array untuk tabel
+        setData(Array.isArray(result) ? result : []);
       }
     } catch (error) {
       console.error(`Gagal memuat data ${activeTab}`, error);
+      alert('Gagal mengambil data dari server.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ==========================================
+  // 2. FUNGSI CREATE & UPDATE (SIMPAN DATA)
+  // ==========================================
   const handleSave = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      // JIKA TAB ADALAH PROFIL, KITA SIMPAN KE SPREADSHEET
-      if (activeTab === 'Profil' && GOOGLE_SCRIPT_URL) {
-        const params = new URLSearchParams();
-        params.append('url_foto_profil', formData.url_foto_profil || '');
-        params.append('sejarah', formData.sejarah || '');
-        params.append('visi', formData.visi || '');
-        params.append('misi', formData.misi || '');
-
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          body: params,
-        });
-        
-        alert('Data Profil berhasil disimpan ke Google Spreadsheet!');
-        
-      } else {
-        // Logika simpan untuk tab lainnya (ke database lokal / route /api/)
-        const isSingle = tabConfig[activeTab].type === 'single';
-        let dataToSave = { ...formData };
-        
-        if (!isSingle && !isEditing) {
-          dataToSave.id = Date.now().toString();
-        } else if (isSingle) {
-          dataToSave.id = 1; 
-        }
-
-        // Simulasi API lokal
-        // await fetch(`/api/${activeTab.toLowerCase()}`, { method: 'POST', body: JSON.stringify(dataToSave) });
-        alert(`Data ${activeTab} berhasil disimpan!`);
+      const endpoint = `/api/${activeTab.toLowerCase()}`;
+      const isSingle = tabConfig[activeTab].type === 'single';
+      
+      // Jika tipe single atau sedang mengedit multi-row, gunakan metode PUT
+      let method = 'POST';
+      if (isSingle || isEditing) {
+         method = 'PUT'; 
       }
 
-      setIsModalOpen(false);
-      if(tabConfig[activeTab].type !== 'single') setFormData({});
-      fetchData(); 
+      const dataToSave = { ...formData };
+
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataToSave)
+      });
+      
+      const result = await response.json();
+
+      if (result.status === 'success') {
+         alert(`Data ${activeTab} berhasil disimpan!`);
+         setIsModalOpen(false);
+         if (!isSingle) setFormData({}); // Reset form jika tabel
+         fetchData(); // Refresh data
+      } else {
+         alert(`Gagal menyimpan: ${result.message || result.error}`);
+      }
       
     } catch (error) {
-      alert('Terjadi kesalahan saat menyimpan data.');
+      alert('Terjadi kesalahan jaringan saat menyimpan data.');
       console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ==========================================
+  // 3. FUNGSI DELETE (HAPUS DATA)
+  // ==========================================
   const handleDelete = async (id) => {
-    if(!window.confirm('Yakin ingin menghapus data ini?')) return;
+    if(!window.confirm('Yakin ingin menghapus data ini secara permanen?')) return;
     setIsLoading(true);
+    
     try {
-      alert('Data terhapus!');
-      fetchData(); 
+      const endpoint = `/api/${activeTab.toLowerCase()}`;
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id })
+      });
+
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        alert('Data berhasil dihapus!');
+        fetchData(); // Refresh tabel setelah dihapus
+      } else {
+        alert(`Gagal menghapus: ${result.message || result.error}`);
+      }
     } catch (error) {
-      alert('Gagal menghapus data.');
+      alert('Terjadi kesalahan jaringan saat menghapus data.');
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ==========================================
+  // FUNGSI PENDUKUNG UI
+  // ==========================================
   const exportToExcel = () => {
     if (data.length === 0) {
       alert('Tidak ada data untuk diekspor!');
@@ -187,7 +197,7 @@ export default function AdminDashboard() {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, activeTab);
-    XLSX.writeFile(workbook, `Data_${activeTab}_LPM.xlsx`);
+    XLSX.writeFile(workbook, `Data_${activeTab}_LPM_UNIVSM.xlsx`);
   };
 
   const handleLogout = () => {
@@ -316,11 +326,6 @@ export default function AdminDashboard() {
         {/* MODE: SINGLE ROW (Form Langsung Tampil) */}
         {tabConfig[activeTab].type === 'single' && !isLoading && (
           <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
-            {activeTab === 'Profil' && !GOOGLE_SCRIPT_URL && (
-               <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg">
-                 <strong>Peringatan:</strong> URL Apps Script kosong. Data yang Anda simpan di sini tidak akan tersimpan secara nyata ke Google Spreadsheet. Harap isi variabel `GOOGLE_SCRIPT_URL` di dalam kode.
-               </div>
-            )}
             <form onSubmit={handleSave}>
               {renderFormInputs()}
               <div className="mt-8 flex justify-end">

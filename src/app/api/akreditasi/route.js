@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 // PENTING: Ganti dengan URL Web App Google Apps Script Anda yang TERBARU
-const GAS_URL = 'https://script.google.com/macros/s/AKfycb.../exec'; 
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz-Yg1meaU9Tne_Pl02wq5M58eR9NK_Jn9RY6qx9gBk9TuaLuvk-0AKs9jjBWv4LyvL7Q/exec'; 
 
 // MENGAMBIL DATA (READ)
 export async function GET() {

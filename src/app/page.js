@@ -313,8 +313,9 @@ export default function Home() {
                     <Target className="text-blue-600 w-6 h-6" />
                     <h2 className="text-xl font-bold text-slate-900">Visi</h2>
                   </div>
+                  {/* PENYELESAIAN ERROR VERCEL ADA DI BARIS BAWAH INI */}
                   <p className="text-slate-600 leading-relaxed italic bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
-                    "{dataProfil.visi || 'Belum ada data visi yang diisi.'}"
+                    &quot;{dataProfil.visi || 'Belum ada data visi yang diisi.'}&quot;
                   </p>
                 </div>
 

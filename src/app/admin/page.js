@@ -40,9 +40,24 @@ const tabConfig = {
     type: 'multi',
     icon: <Award className="w-5 h-5 mr-3" />,
     fields: [
-      { name: 'prodi', label: 'Nama Program Studi' },
-      { name: 'strata', label: 'Strata (Contoh: S1 / D3)' },
-      { name: 'peringkat', label: 'Peringkat Akreditasi' },
+      { 
+        name: 'prodi', 
+        label: 'Nama Program Studi', 
+        type: 'select', 
+        options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'D3 Gizi'] 
+      },
+      { 
+        name: 'strata', 
+        label: 'Strata', 
+        type: 'select', 
+        options: ['D3', 'D4', 'S1', 'S2', 'S3'] 
+      },
+      { 
+        name: 'peringkat', 
+        label: 'Peringkat Akreditasi', 
+        type: 'select', 
+        options: ['Baik', 'Baik Sekali', 'Terakreditasi', 'Unggul', 'Internasional'] 
+      },
       { name: 'masa_berlaku', label: 'Masa Berlaku (Tahun)' },
       { name: 'url_sk', label: 'URL SK Akreditasi (Link Google Drive/PDF)' }
     ] 
@@ -52,8 +67,13 @@ const tabConfig = {
     icon: <FileCheck className="w-5 h-5 mr-3" />,
     fields: [
       { name: 'nama_dokumen', label: 'Nama Dokumen' },
-      { name: 'kategori_ppepp', label: 'Kategori (Penetapan/Pelaksanaan/dll)' },
-      { name: 'tipe_file', label: 'Tipe File (PDF/DOCX)' },
+      { 
+        name: 'kategori_ppepp', 
+        label: 'Kategori (PPEPP)', 
+        type: 'select', 
+        options: ['Penetapan', 'Pelaksanaan', 'Evaluasi', 'Pengendalian', 'Peningkatan'] 
+      },
+      { name: 'tipe_file', label: 'Tipe File (Contoh: PDF, DOCX)' },
       { name: 'ukuran', label: 'Ukuran File (Contoh: 2 MB)' },
       { name: 'url_dokumen', label: 'Link URL Dokumen' }
     ] 
@@ -63,7 +83,12 @@ const tabConfig = {
     icon: <Activity className="w-5 h-5 mr-3" />,
     fields: [
       { name: 'judul', label: 'Judul Berita/Kegiatan' },
-      { name: 'kategori', label: 'Kategori' },
+      { 
+        name: 'kategori', 
+        label: 'Kategori', 
+        type: 'select', 
+        options: ['Kegiatan Univsm', 'Monev', 'LLDIKTI', 'Universitas', 'Fakultas', 'Prodi', 'Akreditasi', 'Audit Mutu Internal', 'Pendampingan', 'Lain-lain'] 
+      },
       { name: 'ringkasan', label: 'Ringkasan Pendek (Tampil di awal)', type: 'textarea' },
       { name: 'konten', label: 'Isi Berita Lengkap', type: 'textarea' },
       { name: 'gambar_url', label: 'URL Gambar Thumbnail' },
@@ -87,12 +112,11 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   // ==========================================
-  // 1. FUNGSI READ (MENGAMBIL DATA)
+  // 1. FUNGSI READ (MENGAMBIL DATA API LOKAL)
   // ==========================================
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Memanggil API internal Next.js (contoh: /api/berita)
       const endpoint = `/api/${activeTab.toLowerCase()}`;
       const response = await fetch(endpoint);
       const result = await response.json();
@@ -100,7 +124,6 @@ export default function AdminDashboard() {
       if (tabConfig[activeTab].type === 'single') {
         setFormData(result || {});
       } else {
-        // Pastikan result berbentuk array untuk tabel
         setData(Array.isArray(result) ? result : []);
       }
     } catch (error) {
@@ -122,7 +145,6 @@ export default function AdminDashboard() {
       const endpoint = `/api/${activeTab.toLowerCase()}`;
       const isSingle = tabConfig[activeTab].type === 'single';
       
-      // Jika tipe single atau sedang mengedit multi-row, gunakan metode PUT
       let method = 'POST';
       if (isSingle || isEditing) {
          method = 'PUT'; 
@@ -141,8 +163,8 @@ export default function AdminDashboard() {
       if (result.status === 'success') {
          alert(`Data ${activeTab} berhasil disimpan!`);
          setIsModalOpen(false);
-         if (!isSingle) setFormData({}); // Reset form jika tabel
-         fetchData(); // Refresh data
+         if (!isSingle) setFormData({}); 
+         fetchData(); 
       } else {
          alert(`Gagal menyimpan: ${result.message || result.error}`);
       }
@@ -174,7 +196,7 @@ export default function AdminDashboard() {
       
       if (result.status === 'success') {
         alert('Data berhasil dihapus!');
-        fetchData(); // Refresh tabel setelah dihapus
+        fetchData(); 
       } else {
         alert(`Gagal menghapus: ${result.message || result.error}`);
       }
@@ -197,7 +219,7 @@ export default function AdminDashboard() {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, activeTab);
-    XLSX.writeFile(workbook, `Data_${activeTab}_LPM_UNIVSM.xlsx`);
+    XLSX.writeFile(workbook, `Data_${activeTab}_LPM.xlsx`);
   };
 
   const handleLogout = () => {
@@ -218,6 +240,9 @@ export default function AdminDashboard() {
     setIsModalOpen(true);
   };
 
+  // ==========================================
+  // RENDER FORM (INPUT, TEXTAREA, SELECT)
+  // ==========================================
   const renderFormInputs = () => {
     return tabConfig[activeTab].fields.map((field) => (
       <div key={field.name} className="mb-4">
@@ -235,7 +260,20 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {field.type === 'textarea' ? (
+        {/* LOGIKA UNTUK DROPDOWN SELECT */}
+        {field.type === 'select' ? (
+          <select
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none bg-white"
+            value={formData[field.name] || ''}
+            onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+            required
+          >
+            <option value="" disabled>-- Pilih {field.label} --</option>
+            {field.options.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        ) : field.type === 'textarea' ? (
           <textarea
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none"
             rows="4"
@@ -281,134 +319,3 @@ export default function AdminDashboard() {
               {tabConfig[tabName].icon}
               <span className="font-medium">{tabName}</span>
             </button>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-blue-800">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center px-4 py-3 text-red-200 hover:bg-red-600 hover:text-white rounded-lg transition duration-200"
-          >
-            <LogOut className="w-5 h-5 mr-3" />
-            <span className="font-medium">Keluar</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* MAIN CONTENT AREA */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Manajemen {activeTab}</h1>
-            <p className="text-gray-500 mt-1">Kelola data {activeTab.toLowerCase()} untuk website utama.</p>
-          </div>
-          
-          {tabConfig[activeTab].type === 'multi' && (
-            <div className="flex space-x-3">
-              <button 
-                onClick={exportToExcel}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm transition"
-              >
-                <Download className="w-4 h-4 mr-2" /> Export Excel
-              </button>
-              <button 
-                onClick={openAddModal}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition"
-              >
-                <Plus className="w-4 h-4 mr-2" /> Tambah Data
-              </button>
-            </div>
-          )}
-        </header>
-
-        {isLoading && <div className="text-blue-600 font-semibold my-4 animate-pulse">Memuat data...</div>}
-
-        {/* MODE: SINGLE ROW (Form Langsung Tampil) */}
-        {tabConfig[activeTab].type === 'single' && !isLoading && (
-          <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
-            <form onSubmit={handleSave}>
-              {renderFormInputs()}
-              <div className="mt-8 flex justify-end">
-                <button type="submit" className="flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md transition">
-                  <Save className="w-5 h-5 mr-2" /> Simpan Perubahan
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* MODE: MULTI ROW (Tabel Data) */}
-        {tabConfig[activeTab].type === 'multi' && !isLoading && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-100 border-b border-gray-200 text-gray-700 text-sm font-semibold uppercase tracking-wider">
-                    {tabConfig[activeTab].fields.slice(0, 4).map(field => ( 
-                      <th key={field.name} className="p-4">{field.label}</th>
-                    ))}
-                    <th className="p-4 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {data.length > 0 ? data.map((item, idx) => (
-                    <tr key={item.id || idx} className="hover:bg-gray-50 transition">
-                      {tabConfig[activeTab].fields.slice(0, 4).map(field => (
-                        <td key={field.name} className="p-4 text-gray-700 truncate max-w-[200px]">
-                          {item[field.name]}
-                        </td>
-                      ))}
-                      <td className="p-4 text-center flex justify-center space-x-2">
-                        <button onClick={() => openEditModal(item)} className="p-2 text-blue-600 hover:bg-blue-50 rounded transition" title="Edit">
-                          <Edit className="w-5 h-5" />
-                        </button>
-                        <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition" title="Hapus">
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan="5" className="p-8 text-center text-gray-500">
-                        Belum ada data {activeTab}. Silakan klik "Tambah Data".
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* MODAL UNTUK TAMBAH / EDIT (MULTI ROW) */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex justify-between items-center z-10">
-              <h2 className="text-xl font-bold text-gray-800">
-                {isEditing ? 'Edit Data' : 'Tambah Data'} {activeTab}
-              </h2>
-              <button type="button" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSave} className="p-6">
-              {renderFormInputs()}
-              <div className="mt-8 flex justify-end space-x-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium transition">
-                  Batal
-                </button>
-                <button type="submit" disabled={isLoading} className="flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition disabled:opacity-50">
-                  <Save className="w-5 h-5 mr-2" /> {isLoading ? 'Menyimpan...' : 'Simpan Data'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-    </div>
-  );
-}

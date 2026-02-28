@@ -44,7 +44,7 @@ const tabConfig = {
         name: 'prodi', 
         label: 'Nama Program Studi', 
         type: 'select', 
-        options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'D3 Gizi'] 
+        options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'S1 Gizi'] 
       },
       { 
         name: 'strata', 
@@ -319,3 +319,134 @@ export default function AdminDashboard() {
               {tabConfig[tabName].icon}
               <span className="font-medium">{tabName}</span>
             </button>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-blue-800">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center px-4 py-3 text-red-200 hover:bg-red-600 hover:text-white rounded-lg transition duration-200"
+          >
+            <LogOut className="w-5 h-5 mr-3" />
+            <span className="font-medium">Keluar</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Manajemen {activeTab}</h1>
+            <p className="text-gray-500 mt-1">Kelola data {activeTab.toLowerCase()} untuk website utama.</p>
+          </div>
+          
+          {tabConfig[activeTab].type === 'multi' && (
+            <div className="flex space-x-3">
+              <button 
+                onClick={exportToExcel}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm transition"
+              >
+                <Download className="w-4 h-4 mr-2" /> Export Excel
+              </button>
+              <button 
+                onClick={openAddModal}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Tambah Data
+              </button>
+            </div>
+          )}
+        </header>
+
+        {isLoading && <div className="text-blue-600 font-semibold my-4 animate-pulse">Memuat data...</div>}
+
+        {/* MODE: SINGLE ROW (Form Langsung Tampil) */}
+        {tabConfig[activeTab].type === 'single' && !isLoading && (
+          <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
+            <form onSubmit={handleSave}>
+              {renderFormInputs()}
+              <div className="mt-8 flex justify-end">
+                <button type="submit" className="flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md transition">
+                  <Save className="w-5 h-5 mr-2" /> Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* MODE: MULTI ROW (Tabel Data) */}
+        {tabConfig[activeTab].type === 'multi' && !isLoading && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-100 border-b border-gray-200 text-gray-700 text-sm font-semibold uppercase tracking-wider">
+                    {tabConfig[activeTab].fields.slice(0, 4).map(field => ( 
+                      <th key={field.name} className="p-4">{field.label}</th>
+                    ))}
+                    <th className="p-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {data.length > 0 ? data.map((item, idx) => (
+                    <tr key={item.id || idx} className="hover:bg-gray-50 transition">
+                      {tabConfig[activeTab].fields.slice(0, 4).map(field => (
+                        <td key={field.name} className="p-4 text-gray-700 truncate max-w-[200px]">
+                          {item[field.name]}
+                        </td>
+                      ))}
+                      <td className="p-4 text-center flex justify-center space-x-2">
+                        <button onClick={() => openEditModal(item)} className="p-2 text-blue-600 hover:bg-blue-50 rounded transition" title="Edit">
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition" title="Hapus">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="5" className="p-8 text-center text-gray-500">
+                        Belum ada data {activeTab}. Silakan klik "Tambah Data".
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* MODAL UNTUK TAMBAH / EDIT (MULTI ROW) */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex justify-between items-center z-10">
+              <h2 className="text-xl font-bold text-gray-800">
+                {isEditing ? 'Edit Data' : 'Tambah Data'} {activeTab}
+              </h2>
+              <button type="button" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSave} className="p-6">
+              {renderFormInputs()}
+              <div className="mt-8 flex justify-end space-x-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium transition">
+                  Batal
+                </button>
+                <button type="submit" disabled={isLoading} className="flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition disabled:opacity-50">
+                  <Save className="w-5 h-5 mr-2" /> {isLoading ? 'Menyimpan...' : 'Simpan Data'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

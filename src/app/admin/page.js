@@ -85,7 +85,7 @@ export default function AdminDashboard() {
   // =========================================================================
   // GANTI URL DI BAWAH INI SAMA DENGAN URL DI FILE page.js (HALAMAN PUBLIK)
   // =========================================================================
-  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzDpc8iqzDiCNs_7iIK9bz-fpSGtqZBE-hwjLuEh_w7U1l3pjqA9F56A8LXccVxb3QWUQ/exec";
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/a/macros/univsm.ac.id/s/AKfycbzEVOzCBxbKKqw5kVDsnvH2eCRQwXaYmpKjjcTUM67osKk-d20WQHcMuhsXsoqgwil2tQ/exec";
 
   useEffect(() => {
     fetchData();

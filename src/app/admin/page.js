@@ -44,7 +44,7 @@ const tabConfig = {
         name: 'prodi', 
         label: 'Nama Program Studi', 
         type: 'select', 
-        options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'S1 Gizi'] 
+        options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'D3 Gizi'] 
       },
       { 
         name: 'strata', 

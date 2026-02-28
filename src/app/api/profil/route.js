@@ -1,34 +1,43 @@
 import { NextResponse } from 'next/server';
 
-const SHEET_URL = 'https://sheetdb.io/api/v1/xjth2jttyy0dw';
+// PENTING: Ganti dengan URL Web App Google Apps Script Anda yang TERBARU
+const GAS_URL = 'https://script.google.com/macros/s/AKfycb.../exec'; 
 
 // MENGAMBIL DATA PROFIL (READ)
 export async function GET() {
   try {
-    const response = await fetch(`${SHEET_URL}?sheet=Profil`, {
+    // Panggil ?sheet=profil (huruf kecil)
+    const response = await fetch(`${GAS_URL}?sheet=profil`, {
       cache: 'no-store'
     });
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ error: 'Gagal mengambil data Profil' }, { status: 500 });
+    return NextResponse.json({ error: 'Gagal mengambil data profil' }, { status: 500 });
   }
 }
 
-// MENGUBAH DATA PROFIL (UPDATE) - Hanya mengubah data di baris id=1
+// MENGUBAH DATA PROFIL (UPDATE)
 export async function PUT(request) {
   try {
     const updateData = await request.json();
     
-    const response = await fetch(`${SHEET_URL}/id/1?sheet=Profil`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: updateData })
+    // Tambahkan parameter sheet dan action
+    updateData.sheet = 'profil';
+    updateData.action = 'UPDATE'; 
+
+    const response = await fetch(GAS_URL, {
+      method: 'POST', // Komunikasi ke GAS selalu POST
+      headers: { 
+        'Content-Type': 'text/plain;charset=utf-8' 
+      },
+      // Kirim data langsung
+      body: JSON.stringify(updateData)
     });
     
     const result = await response.json();
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ error: 'Gagal mengubah data Profil' }, { status: 500 });
+    return NextResponse.json({ error: 'Gagal mengubah data profil' }, { status: 500 });
   }
 }

@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Website Lembaga Penjaminan Mutu (LPM) - UNIVSM
 
-## Getting Started
+Repositori ini berisi *source code* untuk Website Sistem Informasi Lembaga Penjaminan Mutu (LPM) Universitas Sapta Mandiri. Platform ini dibangun untuk mendukung transparansi dan kemudahan akses informasi terkait penjaminan mutu di lingkungan kampus.
 
-First, run the development server:
+## 🚀 Fitur Utama
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Beranda & Profil:** Informasi umum, visi, misi, dan sejarah LPM.
+- **Sistem Penjaminan Mutu Internal (SPMI):** Visualisasi siklus PPEPP (Penetapan, Pelaksanaan, Evaluasi, Pengendalian, dan Peningkatan).
+- **Status Akreditasi:** Daftar peringkat akreditasi program studi beserta tautan unduhan SK BAN-PT/Lembaga Akreditasi Mandiri.
+- **Repositori Dokumen Mutu:** Akses terpusat untuk mengunduh dokumen kebijakan, manual, standar, dan formulir (SOP).
+- **Pusat Informasi & Berita:** Pembaruan terkini seputar kegiatan penjaminan mutu dan audit internal.
+- **Portal Admin:** Halaman login khusus untuk manajemen data website (terintegrasi dengan *backend*).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Teknologi yang Digunakan
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- **Framework:** [Next.js](https://nextjs.org/) (App Router)
+- **Library UI:** [React.js](https://reactjs.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Ikon:** [Lucide React](https://lucide.dev/)
+- **Database/API Backend:** Google Sheets & Google Apps Script (menyesuaikan arsitektur yang digunakan)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 💻 Cara Menjalankan Proyek Secara Lokal
 
-## Learn More
+Pastikan Anda sudah menginstal Node.js di komputer Anda.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Kloning Repositori:**
+   ```bash
+   git clone [https://github.com/username-anda/website-lpm-univsm.git](https://github.com/username-anda/website-lpm-univsm.git)

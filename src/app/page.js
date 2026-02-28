@@ -590,8 +590,8 @@ export default function Home() {
       <div className="bg-blue-900 text-white text-xs py-2 hidden md:block shrink-0">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex space-x-4">
-            <span className="flex items-center"><Phone className="w-3 h-3 mr-2" /> (021) 1234-5678</span>
-            <span className="flex items-center"><Mail className="w-3 h-3 mr-2" /> lpm@sapta-mandiri.ac.id</span>
+            <span className="flex items-center"><Phone className="w-3 h-3 mr-2" /> (62) 812 1770 3626</span>
+            <span className="flex items-center"><Mail className="w-3 h-3 mr-2" /> lpm@univsm.ac.id</span>
           </div>
           <div className="flex space-x-4">
             <a href="#" className="hover:text-blue-200 transition">Portal Mahasiswa</a>
@@ -718,7 +718,7 @@ export default function Home() {
                 </li>
                 <li className="flex items-center">
                   <Phone className="w-5 h-5 mr-3 text-blue-500 shrink-0" />
-                  <span className="text-gray-400">(021) 1234-5678</span>
+                  <span className="text-gray-400">(62) 812 1770 3626</span>
                 </li>
               </ul>
             </div>

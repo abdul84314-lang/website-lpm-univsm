@@ -112,12 +112,13 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   // ==========================================
-  // 1. FUNGSI READ (MENGAMBIL DATA API LOKAL)
+  // 1. FUNGSI READ
   // ==========================================
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const endpoint = `/api/${activeTab.toLowerCase()}`;
+      // Mengarah ke Master API route tunggal kita
+      const endpoint = `/api/gas?sheet=${activeTab.toLowerCase()}`;
       const response = await fetch(endpoint);
       const result = await response.json();
       
@@ -135,25 +136,30 @@ export default function AdminDashboard() {
   };
 
   // ==========================================
-  // 2. FUNGSI CREATE & UPDATE (SIMPAN DATA)
+  // 2. FUNGSI CREATE & UPDATE 
   // ==========================================
   const handleSave = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const endpoint = `/api/${activeTab.toLowerCase()}`;
       const isSingle = tabConfig[activeTab].type === 'single';
+      const actionType = (isSingle || isEditing) ? 'UPDATE' : 'CREATE';
       
-      let method = 'POST';
-      if (isSingle || isEditing) {
-         method = 'PUT'; 
+      // Menggabungkan data form dengan info sheet dan action
+      const dataToSave = { 
+        ...formData, 
+        sheet: activeTab.toLowerCase(),
+        action: actionType
+      };
+
+      if (!isSingle && !isEditing) {
+         dataToSave.id = Date.now().toString(); // ID Unik untuk data baru
       }
 
-      const dataToSave = { ...formData };
-
-      const response = await fetch(endpoint, {
-        method: method,
+      // Selalu menggunakan metode POST ke Master API
+      const response = await fetch('/api/gas', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataToSave)
       });
@@ -178,18 +184,24 @@ export default function AdminDashboard() {
   };
 
   // ==========================================
-  // 3. FUNGSI DELETE (HAPUS DATA)
+  // 3. FUNGSI DELETE
   // ==========================================
   const handleDelete = async (id) => {
     if(!window.confirm('Yakin ingin menghapus data ini secara permanen?')) return;
     setIsLoading(true);
     
     try {
-      const endpoint = `/api/${activeTab.toLowerCase()}`;
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
+      const payload = {
+        sheet: activeTab.toLowerCase(),
+        action: 'DELETE',
+        id: id
+      };
+
+      // Selalu menggunakan metode POST ke Master API
+      const response = await fetch('/api/gas', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id })
+        body: JSON.stringify(payload)
       });
 
       const result = await response.json();
@@ -240,15 +252,11 @@ export default function AdminDashboard() {
     setIsModalOpen(true);
   };
 
-  // ==========================================
-  // RENDER FORM (INPUT, TEXTAREA, SELECT)
-  // ==========================================
   const renderFormInputs = () => {
     return tabConfig[activeTab].fields.map((field) => (
       <div key={field.name} className="mb-4">
         <label className="block text-sm font-semibold text-gray-700 mb-2">{field.label}</label>
         
-        {/* FITUR PREVIEW GAMBAR */}
         {(field.name === 'url_foto_profil' || field.name === 'gambar_bg' || field.name === 'gambar_url') && formData[field.name] && (
           <div className="mb-3 p-2 bg-gray-50 rounded-lg border border-gray-200 inline-block">
             <img 
@@ -260,7 +268,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* LOGIKA UNTUK DROPDOWN SELECT */}
         {field.type === 'select' ? (
           <select
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none bg-white"
@@ -298,7 +305,6 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
       
-      {/* SIDEBAR */}
       <aside className="w-full md:w-64 bg-blue-900 text-white flex flex-col shrink-0 shadow-xl z-10 md:min-h-screen">
         <div className="p-6 border-b border-blue-800">
           <h2 className="text-2xl font-bold tracking-wider">LPM ADMIN</h2>
@@ -333,7 +339,6 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
       <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div>
@@ -361,7 +366,7 @@ export default function AdminDashboard() {
 
         {isLoading && <div className="text-blue-600 font-semibold my-4 animate-pulse">Memuat data...</div>}
 
-        {/* MODE: SINGLE ROW (Form Langsung Tampil) */}
+        {/* SINGLE ROW */}
         {tabConfig[activeTab].type === 'single' && !isLoading && (
           <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
             <form onSubmit={handleSave}>
@@ -375,7 +380,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* MODE: MULTI ROW (Tabel Data) */}
+        {/* MULTI ROW */}
         {tabConfig[activeTab].type === 'multi' && !isLoading && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
@@ -419,7 +424,7 @@ export default function AdminDashboard() {
         )}
       </main>
 
-      {/* MODAL UNTUK TAMBAH / EDIT (MULTI ROW) */}
+      {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">

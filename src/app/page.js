@@ -699,10 +699,15 @@ export default function Home() {
             <div>
               <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Lembaga Terkait</h3>
               <ul className="space-y-3 text-sm">
-                <li><a href="#" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> Kemendiktisaintek</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> BAN-PT</a></li>
-                <li><a href="#" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LLDikti Wilayah</a></li>
-              </ul>
+                <li><a href="https://kemdiktisaintek.go.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> Kemendiktisaintek</a></li>
+                <li><a href="https://www.banpt.or.id/direktori/prodi/pencarian_prodi.php" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> BAN-PT</a></li>
+                <li><a href="https://lldikti11.kemdiktisaintek.go.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LLDikti Wilayah XI</a></li>
+                <li><a href="https://laminfokom.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM INFOKOM</a></li>
+                <li><a href="https://lamemba.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMEMBA</a></li>
+                <li><a href="https://lamdik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMDIK</a></li>
+                <li><a href="https://lamptkes.org/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM PT KES</a></li>
+                <li><a href="https://lamteknik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM TEKNIK</a></li>  
+            </ul>
             </div>
             <div>
               <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Hubungi Kami</h3>

@@ -11,7 +11,7 @@ import {
 // =========================================================================
 // PENTING: GANTI URL DI BAWAH INI DENGAN URL WEB APP DARI GOOGLE APPS SCRIPT
 // =========================================================================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzDpc8iqzDiCNs_7iIK9bz-fpSGtqZBE-hwjLuEh_w7U1l3pjqA9F56A8LXccVxb3QWUQ/exec"; 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/a/macros/univsm.ac.id/s/AKfycbzEVOzCBxbKKqw5kVDsnvH2eCRQwXaYmpKjjcTUM67osKk-d20WQHcMuhsXsoqgwil2tQ/exec"; 
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

@@ -11,7 +11,7 @@ import {
 // =========================================================================
 // PENTING: GANTI URL DI BAWAH INI DENGAN URL WEB APP DARI GOOGLE APPS SCRIPT
 // =========================================================================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIY6jG3Bd4uPcCkTflrqephpg5Pe4dfP13_jp24pUG6gEin4nXsEkiip0tNt4mqvLJZQ/exec"; 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-Yg1meaU9Tne_Pl02wq5M58eR9NK_Jn9RY6qx9gBk9TuaLuvk-0AKs9jjBWv4LyvL7Q/exec"; 
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -39,40 +39,46 @@ export default function Home() {
       setIsLoading(true);
       try {
         if (currentPage === 'beranda') {
-          // Fetch data untuk Beranda (Teks Hero)
-          const resBeranda = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=Beranda`);
+          // Fetch data untuk Beranda (Teks Hero) - Huruf kecil: beranda
+          const resBeranda = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=beranda`);
           const jsonBeranda = await resBeranda.json();
           if (!jsonBeranda.error) setDataBeranda(jsonBeranda);
 
           // Fetch sekalian Berita terbaru untuk ditampilkan di Beranda
           if (news.length === 0) {
-            const resBerita = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=Berita`);
+            // Huruf kecil: berita
+            const resBerita = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=berita`);
             const jsonBerita = await resBerita.json();
             if (Array.isArray(jsonBerita)) setNews(jsonBerita);
           }
         } 
         else if (currentPage === 'profil' && Object.keys(dataProfil).length === 0) {
-          const resProfil = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=Profil`);
+          // Huruf kecil: profil
+          const resProfil = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=profil`);
           const jsonProfil = await resProfil.json();
           if (!jsonProfil.error) setDataProfil(jsonProfil);
         }
         else if (currentPage === 'spmi' && Object.keys(dataSPMI).length === 0) {
-          const resSPMI = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=SPMI`);
+          // Huruf kecil: spmi
+          const resSPMI = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=spmi`);
           const jsonSPMI = await resSPMI.json();
           if (!jsonSPMI.error) setDataSPMI(jsonSPMI);
         }
         else if (currentPage === 'akreditasi' && dataAkreditasi.length === 0) {
-          const resAkreditasi = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=Akreditasi`);
+          // Huruf kecil: akreditasi
+          const resAkreditasi = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=akreditasi`);
           const jsonAkreditasi = await resAkreditasi.json();
           if (Array.isArray(jsonAkreditasi)) setDataAkreditasi(jsonAkreditasi);
         }
         else if (currentPage === 'dokumen' && documents.length === 0) {
-          const resDok = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=Dokumen`);
+          // Huruf kecil: dokumen
+          const resDok = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=dokumen`);
           const jsonDok = await resDok.json();
           if (Array.isArray(jsonDok)) setDocuments(jsonDok);
         }
         else if (currentPage === 'berita' && news.length === 0) {
-          const resBerita = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=Berita`);
+          // Huruf kecil: berita
+          const resBerita = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=berita`);
           const jsonBerita = await resBerita.json();
           if (Array.isArray(jsonBerita)) setNews(jsonBerita);
         }

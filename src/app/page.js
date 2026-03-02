@@ -37,82 +37,89 @@ export default function Home() {
   const [dataLinkSurvei, setDataLinkSurvei] = useState({});
   const [dataLaporanSurvei, setDataLaporanSurvei] = useState([]);
 
+  // =========================================================================
+  // FUNGSI TARIK DATA SUPER CEPAT (CACHE & BACKGROUND FETCH)
+  // =========================================================================
   useEffect(() => {
-    const fetchPageData = async () => {
-      if (!GOOGLE_SCRIPT_URL) {
-        setIsLoading(false);
-        return;
+    if (!GOOGLE_SCRIPT_URL) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Fungsi fetch dengan sistem Cache Session Storage
+    const fetchWithCache = async (sheetName, stateSetter, forceLoading = false) => {
+      const cacheKey = `lpm_cache_${sheetName}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+
+      // 1. Tampilkan dari Cache (jika ada) langsung tanpa loading
+      if (cachedData) {
+        stateSetter(JSON.parse(cachedData));
+        if (forceLoading) setIsLoading(false); 
+      } else if (forceLoading) {
+        setIsLoading(true); // Hanya loading jika cache benar-benar kosong
       }
 
-      setIsLoading(true);
+      // 2. Lakukan Fetch di latar belakang untuk mendapat data terbaru
       try {
-        // Ambil link survei di awal agar siap saat diklik
-        if (Object.keys(dataLinkSurvei).length === 0) {
-          fetch(`${GOOGLE_SCRIPT_URL}?sheet=link_survei`)
-            .then(res => res.json())
-            .then(json => { if(!json.error && json.length > 0) setDataLinkSurvei(json[0]); }); // Ambil baris pertama
-        }
-
-        if (currentPage === 'beranda') {
-          const resBeranda = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=beranda`);
-          const jsonBeranda = await resBeranda.json();
-          if (!jsonBeranda.error) setDataBeranda(jsonBeranda);
-
-          if (news.length === 0) {
-            const resBerita = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=berita`);
-            const jsonBerita = await resBerita.json();
-            if (Array.isArray(jsonBerita)) setNews(jsonBerita);
+        const res = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=${sheetName}`);
+        const json = await res.json();
+        
+        if (!json.error) {
+          if (Array.isArray(json) || Object.keys(json).length > 0) {
+            stateSetter(json);
+            sessionStorage.setItem(cacheKey, JSON.stringify(json)); // Perbarui cache
           }
-        } 
-        else if (currentPage === 'profil' && Object.keys(dataProfil).length === 0) {
-          const resProfil = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=profil`);
-          const jsonProfil = await resProfil.json();
-          if (!jsonProfil.error) setDataProfil(jsonProfil);
-        }
-        else if (currentPage === 'spmi' && Object.keys(dataSPMI).length === 0) {
-          const resSPMI = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=spmi`);
-          const jsonSPMI = await resSPMI.json();
-          if (!jsonSPMI.error) setDataSPMI(jsonSPMI);
-        }
-        else if (currentPage === 'akreditasi' && dataAkreditasi.length === 0) {
-          const resAkreditasi = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=akreditasi`);
-          const jsonAkreditasi = await resAkreditasi.json();
-          if (Array.isArray(jsonAkreditasi)) setDataAkreditasi(jsonAkreditasi);
-        }
-        else if (currentPage === 'dokumen' && documents.length === 0) {
-          const resDok = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=dokumen`);
-          const jsonDok = await resDok.json();
-          if (Array.isArray(jsonDok)) setDocuments(jsonDok);
-        }
-        else if (currentPage === 'peraturan' && dataPeraturan.length === 0) {
-          const resPeraturan = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=peraturan`);
-          const jsonPeraturan = await resPeraturan.json();
-          if (Array.isArray(jsonPeraturan)) setDataPeraturan(jsonPeraturan);
-        }
-        else if (currentPage === 'laporan_kepuasan' && dataKepuasan.length === 0) {
-          const resKepuasan = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=kepuasan`);
-          const jsonKepuasan = await resKepuasan.json();
-          if (Array.isArray(jsonKepuasan)) setDataKepuasan(jsonKepuasan);
-        }
-        else if ((currentPage === 'laporan_survei' || currentPage === 'laporan_keluhan') && dataLaporanSurvei.length === 0) {
-          const resLaporan = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=laporan_survei`);
-          const jsonLaporan = await resLaporan.json();
-          if (Array.isArray(jsonLaporan)) setDataLaporanSurvei(jsonLaporan);
-        }
-        else if (currentPage === 'berita' && news.length === 0) {
-          const resBerita = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=berita`);
-          const jsonBerita = await resBerita.json();
-          if (Array.isArray(jsonBerita)) setNews(jsonBerita);
         }
       } catch (error) {
-        console.error("Gagal mengambil data dari Spreadsheet:", error);
+        console.error(`Gagal memuat ${sheetName}:`, error);
       } finally {
-        setIsLoading(false);
+        if (forceLoading) setIsLoading(false);
       }
     };
 
-    fetchPageData();
-  }, [currentPage, dataLinkSurvei]); 
+    // Ambil link survei secara diam-diam (silent) agar siap saat menu diklik
+    if (Object.keys(dataLinkSurvei).length === 0) {
+      fetchWithCache('link_survei', (data) => {
+        if (Array.isArray(data) && data.length > 0) setDataLinkSurvei(data[0]);
+        else if (!Array.isArray(data) && data) setDataLinkSurvei(data);
+      }, false);
+    }
+
+    // Eksekusi pengambilan data berdasarkan tab yang aktif
+    switch (currentPage) {
+      case 'beranda':
+        fetchWithCache('beranda', setDataBeranda, Object.keys(dataBeranda).length === 0);
+        if (news.length === 0) fetchWithCache('berita', setNews, false); // Berita di beranda diambil silent
+        break;
+      case 'profil':
+        if (Object.keys(dataProfil).length === 0) fetchWithCache('profil', setDataProfil, true);
+        break;
+      case 'spmi':
+        if (Object.keys(dataSPMI).length === 0) fetchWithCache('spmi', setDataSPMI, true);
+        break;
+      case 'akreditasi':
+        if (dataAkreditasi.length === 0) fetchWithCache('akreditasi', setDataAkreditasi, true);
+        break;
+      case 'dokumen':
+        if (documents.length === 0) fetchWithCache('dokumen', setDocuments, true);
+        break;
+      case 'peraturan':
+        if (dataPeraturan.length === 0) fetchWithCache('peraturan', setDataPeraturan, true);
+        break;
+      case 'laporan_kepuasan':
+        if (dataKepuasan.length === 0) fetchWithCache('kepuasan', setDataKepuasan, true);
+        break;
+      case 'laporan_survei':
+      case 'laporan_keluhan':
+        if (dataLaporanSurvei.length === 0) fetchWithCache('laporan_survei', setDataLaporanSurvei, true);
+        break;
+      case 'berita':
+        if (news.length === 0) fetchWithCache('berita', setNews, true);
+        break;
+      default:
+        break;
+    }
+  }, [currentPage]); 
 
   // ================= FUNGSI NAVIGASI CERDAS =================
   const navigate = (page, category = 'Semua', data = null) => {
@@ -284,7 +291,7 @@ export default function Home() {
   const ProfilPage = () => (
     <div className="py-16 bg-slate-50 min-h-[70vh] animate-in fade-in duration-500">
       <div className="container mx-auto px-4 max-w-5xl">
-        {isLoading ? (
+        {isLoading && Object.keys(dataProfil).length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64"><Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4"/> Memuat Profil...</div>
         ) : (
           <div className="space-y-8">
@@ -334,7 +341,7 @@ export default function Home() {
       <div className="max-w-4xl w-full bg-white p-10 rounded-2xl shadow-sm border border-gray-100 text-center">
         <ShieldCheck className="w-20 h-20 text-blue-600 mx-auto mb-6" />
         <h1 className="text-4xl font-bold text-gray-900 mb-6">Sistem Penjaminan Mutu Internal (SPMI)</h1>
-        {isLoading ? ( <div className="flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
+        {isLoading && Object.keys(dataSPMI).length === 0 ? ( <div className="flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
         ) : (
           <div className="text-lg text-gray-600 text-left whitespace-pre-wrap leading-relaxed bg-gray-50 p-6 rounded-xl border border-gray-100">
             {dataSPMI.deskripsi_spmi || "Data deskripsi SPMI belum diisi. Silakan isi melalui halaman admin."}
@@ -364,7 +371,7 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {isLoading ? (
+                {isLoading && dataAkreditasi.length === 0 ? (
                   <tr><td colSpan="5" className="p-8 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2"/> Memuat data akreditasi...</td></tr>
                 ) : dataAkreditasi.length > 0 ? dataAkreditasi.map((item, idx) => (
                   <tr key={idx} className="hover:bg-blue-50 transition duration-150">
@@ -416,7 +423,7 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {isLoading ? ( <tr><td colSpan="5" className="p-8 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2"/> Memuat data dokumen...</td></tr>
+                  {isLoading && documents.length === 0 ? ( <tr><td colSpan="5" className="p-8 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2"/> Memuat data dokumen...</td></tr>
                   ) : filteredDocs.length > 0 ? filteredDocs.map((doc, idx) => (
                     <tr key={idx} className="hover:bg-blue-50 transition duration-150">
                       <td className="p-4 font-medium text-gray-800 flex items-center"><FileCheck className="w-5 h-5 text-blue-500 mr-3 shrink-0" /> {doc.nama_dokumen}</td>
@@ -452,7 +459,7 @@ export default function Home() {
                 <tr className="bg-blue-900 text-white text-sm uppercase tracking-wider"><th className="p-4 font-semibold w-1/2">Judul Peraturan</th><th className="p-4 font-semibold text-center w-1/4">Kategori</th><th className="p-4 font-semibold text-center">Tanggal</th><th className="p-4 font-semibold text-center">Aksi</th></tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {isLoading ? ( <tr><td colSpan="4" className="p-8 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2"/> Memuat peraturan...</td></tr>
+                {isLoading && dataPeraturan.length === 0 ? ( <tr><td colSpan="4" className="p-8 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2"/> Memuat peraturan...</td></tr>
                 ) : dataPeraturan.length > 0 ? dataPeraturan.map((item, idx) => (
                   <tr key={idx} className="hover:bg-blue-50 transition duration-150">
                     <td className="p-4 font-semibold text-gray-800">{item.judul_peraturan}</td>
@@ -472,9 +479,7 @@ export default function Home() {
     </div>
   );
 
-  // Komponen Tabel Laporan Survei dan Keluhan (Dinamis)
   const LaporanSurveiPage = ({ isKeluhan }) => {
-    // Filter laporan berdasarkan "isKeluhan". Jika true = cari yg namanya ada keluhan. Jika false = cari yg survei kepuasan biasa.
     const filteredReports = dataLaporanSurvei.filter(item => {
       const kat = (item.kategori || "").toLowerCase();
       return isKeluhan ? kat.includes('keluhan') : !kat.includes('keluhan');
@@ -495,7 +500,7 @@ export default function Home() {
                   <tr className="bg-blue-900 text-white text-sm uppercase tracking-wider"><th className="p-4 font-semibold w-1/2">Judul Laporan</th><th className="p-4 font-semibold text-center">Kategori</th><th className="p-4 font-semibold text-center">Tahun</th><th className="p-4 font-semibold text-center">Aksi</th></tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {isLoading ? ( <tr><td colSpan="4" className="p-8 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2"/> Memuat laporan...</td></tr>
+                  {isLoading && dataLaporanSurvei.length === 0 ? ( <tr><td colSpan="4" className="p-8 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2"/> Memuat laporan...</td></tr>
                   ) : filteredReports.length > 0 ? filteredReports.map((item, idx) => (
                     <tr key={idx} className="hover:bg-blue-50 transition duration-150">
                       <td className="p-4 font-semibold text-gray-800">{item.judul_laporan}</td>
@@ -543,7 +548,7 @@ export default function Home() {
             ))}
           </div>
 
-          {isLoading ? ( <div className="flex justify-center my-20"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
+          {isLoading && dataKepuasan.length === 0 ? ( <div className="flex justify-center my-20"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
           ) : filteredData.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {filteredData.map((item, idx) => {
@@ -594,7 +599,7 @@ export default function Home() {
       <div className="container mx-auto px-4 max-w-6xl">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Berita & Kegiatan Mutu</h1>
         <p className="text-gray-600 mb-10 border-b pb-6">Informasi terbaru seputar kegiatan LPM dan perkembangan mutu kampus.</p>
-        {isLoading ? ( <div className="flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
+        {isLoading && news.length === 0 ? ( <div className="flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {news.map((item, idx) => ( 
@@ -645,12 +650,9 @@ export default function Home() {
       case 'akreditasi': return <AkreditasiPage />;
       case 'dokumen': return <DokumenPage />;
       case 'peraturan': return <PeraturanPage />; 
-      
-      // Menu Pelanggan / Survei
       case 'laporan_kepuasan': return <KepuasanPage />;   
       case 'laporan_survei': return <LaporanSurveiPage isKeluhan={false} />;
       case 'laporan_keluhan': return <LaporanSurveiPage isKeluhan={true} />;
-
       case 'berita': return <BeritaPage />;
       case 'detail_berita': return <DetailBeritaPage />;
       default: return <BerandaPage />;

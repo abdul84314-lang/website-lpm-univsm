@@ -834,4 +834,174 @@ export default function Home() {
                     <button onClick={() => navigate('instrumen_tendik')} className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50">Tenaga Kependidikan</button>
                     <button onClick={() => navigate('instrumen_alumni')} className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50">Alumni</button>
                     <button onClick={() => navigate('instrumen_pengguna')} className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50">Pengguna Lulusan</button>
-                    <button onClick={() => navigate('instrumen_mitra')} className="block w-full text-left px-4 py-2 text-sm
+                    <button onClick={() => navigate('instrumen_mitra')} className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50">Mitra Kerjasama</button>
+                  </div>
+                </div>
+
+                <button onClick={() => navigate('form_keluhan')} className="block w-full text-left px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-blue-50">Form Keluhan Pelanggan</button>
+                <button onClick={() => navigate('laporan_kepuasan')} className="block w-full text-left px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-blue-50">Laporan Kepuasan Pelanggan</button>
+                <button onClick={() => navigate('laporan_survei')} className="block w-full text-left px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-blue-50">Laporan Survei</button>
+                <button onClick={() => navigate('laporan_keluhan')} className="block w-full text-left px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-blue-50">Laporan Keluhan Pelanggan</button>
+              </div>
+            </div>
+
+            {/* Bagian Akhir Navigasi */}
+            {navLinksEnd.map((link) => (
+              <button 
+                key={link.id} 
+                onClick={() => navigate(link.id)} 
+                className={`font-semibold py-2 transition duration-300 ${currentPage === link.id ? 'text-blue-700 border-b-2 border-blue-700' : 'text-gray-600 hover:text-blue-700'}`}
+              >
+                {link.name}
+              </button>
+            ))}
+            
+            {/* Tombol Login Desktop */}
+            <div className="border-l border-gray-300 pl-6 ml-2">
+              <Link href="/login" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition duration-300 flex items-center shadow-sm text-sm">
+                Login Admin
+              </Link>
+            </div>
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <button 
+            className="md:hidden text-gray-600 hover:text-blue-800 p-2"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+
+        {/* ======================= MOBILE NAVIGATION (ACCORDION) ======================= */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg z-50 max-h-[85vh] overflow-y-auto">
+            <div className="container mx-auto px-4 py-2 flex flex-col">
+              
+              {navLinksStart.map((link) => (
+                <button 
+                  key={link.id} 
+                  onClick={() => navigate(link.id)} 
+                  className={`text-left font-semibold py-3 border-b border-gray-50 px-4 ${currentPage === link.id ? 'text-blue-700 bg-blue-50 rounded-lg' : 'text-gray-700 hover:text-blue-700'}`}
+                >
+                  {link.name}
+                </button>
+              ))}
+
+              {/* Accordion Menu: Survei Pelanggan */}
+              <div className="border-b border-gray-50">
+                <button 
+                  onClick={() => setMobileSurveiOpen(!mobileSurveiOpen)} 
+                  className={`w-full text-left font-semibold py-3 px-4 flex justify-between items-center ${['laporan_kepuasan', 'form_keluhan', 'laporan_survei', 'laporan_keluhan'].includes(currentPage) || currentPage.startsWith('instrumen_') ? 'text-blue-700 bg-blue-50 rounded-lg' : 'text-gray-700'}`}
+                >
+                  Survei Pelanggan <ChevronDown className={`w-4 h-4 transition-transform ${mobileSurveiOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {mobileSurveiOpen && (
+                  <div className="bg-gray-50 pl-4 py-2">
+                    {/* Accordion Menu Nested: Instrumen */}
+                    <button onClick={() => setMobileInstrumenOpen(!mobileInstrumenOpen)} className="w-full text-left font-semibold py-2 px-4 text-gray-700 flex justify-between items-center">
+                      Instrumen Survei Pelanggan <ChevronDown className={`w-4 h-4 transition-transform ${mobileInstrumenOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {mobileInstrumenOpen && (
+                      <div className="pl-4 py-1 border-l-2 border-gray-200 ml-4 mb-2">
+                        <button onClick={() => navigate('instrumen_mahasiswa')} className="block w-full text-left py-2 px-4 text-sm text-gray-600 hover:text-blue-700">Mahasiswa</button>
+                        <button onClick={() => navigate('instrumen_dosen')} className="block w-full text-left py-2 px-4 text-sm text-gray-600 hover:text-blue-700">Dosen</button>
+                        <button onClick={() => navigate('instrumen_tendik')} className="block w-full text-left py-2 px-4 text-sm text-gray-600 hover:text-blue-700">Tenaga Kependidikan</button>
+                        <button onClick={() => navigate('instrumen_alumni')} className="block w-full text-left py-2 px-4 text-sm text-gray-600 hover:text-blue-700">Alumni</button>
+                        <button onClick={() => navigate('instrumen_pengguna')} className="block w-full text-left py-2 px-4 text-sm text-gray-600 hover:text-blue-700">Pengguna Lulusan</button>
+                        <button onClick={() => navigate('instrumen_mitra')} className="block w-full text-left py-2 px-4 text-sm text-gray-600 hover:text-blue-700">Mitra Kerjasama</button>
+                      </div>
+                    )}
+
+                    <button onClick={() => navigate('form_keluhan')} className="block w-full text-left py-2 px-4 text-sm font-semibold text-gray-600 hover:text-blue-700">Form Keluhan Pelanggan</button>
+                    <button onClick={() => navigate('laporan_kepuasan')} className="block w-full text-left py-2 px-4 text-sm font-semibold text-gray-600 hover:text-blue-700">Laporan Kepuasan Pelanggan</button>
+                    <button onClick={() => navigate('laporan_survei')} className="block w-full text-left py-2 px-4 text-sm font-semibold text-gray-600 hover:text-blue-700">Laporan Survei</button>
+                    <button onClick={() => navigate('laporan_keluhan')} className="block w-full text-left py-2 px-4 text-sm font-semibold text-gray-600 hover:text-blue-700">Laporan Keluhan Pelanggan</button>
+                  </div>
+                )}
+              </div>
+
+              {navLinksEnd.map((link) => (
+                <button 
+                  key={link.id} 
+                  onClick={() => navigate(link.id)} 
+                  className={`text-left font-semibold py-3 border-b border-gray-50 px-4 ${currentPage === link.id ? 'text-blue-700 bg-blue-50 rounded-lg' : 'text-gray-700 hover:text-blue-700'}`}
+                >
+                  {link.name}
+                </button>
+              ))}
+              
+              {/* Tombol Login Mobile */}
+              <Link href="/login" className="text-center font-bold py-3 mt-4 mb-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition mx-4 shadow-sm">
+                Login Admin
+              </Link>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* RENDER KONTEN HALAMAN */}
+      <main className="flex-grow">
+        {renderContent()}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-gray-300 pt-16 pb-8 shrink-0 mt-auto">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            <div>
+              <div className="flex items-center space-x-2 mb-6">
+                 <ShieldCheck className="w-8 h-8 text-white" />
+                 <div>
+                    <h2 className="text-white font-bold text-lg leading-tight">LPM UNIVSM</h2>
+                 </div>
+              </div>
+              <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                Menjamin penyelenggaraan pendidikan tinggi yang bermutu, terstandar, dan relevan dengan kebutuhan zaman melalui budaya mutu berkelanjutan.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Tautan Cepat</h3>
+              <ul className="space-y-3 text-sm flex flex-col items-start">
+                {navLinksStart.map(link => (
+                  <button key={`footer-${link.id}`} onClick={() => navigate(link.id)} className="text-left hover:text-blue-400 transition w-fit">{link.name}</button>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Lembaga Terkait</h3>
+              <ul className="space-y-3 text-sm">
+                <li><a href="https://kemdiktisaintek.go.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> Kemendiktisaintek</a></li>
+                <li><a href="https://www.banpt.or.id/direktori/prodi/pencarian_prodi.php" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> BAN-PT</a></li>
+                <li><a href="https://lldikti11.kemdiktisaintek.go.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LLDikti Wilayah XI</a></li>
+                <li><a href="https://laminfokom.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM INFOKOM</a></li>
+                <li><a href="https://lamemba.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMEMBA</a></li>
+                <li><a href="https://lamdik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMDIK</a></li>
+                <li><a href="https://lamptkes.org/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM PT KES</a></li>
+                <li><a href="https://lamteknik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM TEKNIK</a></li>  
+            </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Hubungi Kami</h3>
+              <ul className="space-y-4 text-sm">
+                <li className="flex items-start">
+                  <MapPin className="w-5 h-5 mr-3 text-blue-500 shrink-0" />
+                  <span className="text-gray-400">Kampus C Haur Batu, Kecamatan Paringin, Kabupaten Balangan</span>
+                </li>
+                <li className="flex items-center">
+                  <Phone className="w-5 h-5 mr-3 text-blue-500 shrink-0" />
+                  <span className="text-gray-400">(62) 812 1770 3626</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 pt-8 mt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+            <p>&copy; {new Date().getFullYear()} Lembaga Penjaminan Mutu - Universitas Sapta Mandiri.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

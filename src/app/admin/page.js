@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, FileText, Award, BookOpen, Activity, 
   Plus, Edit, Trash2, Save, Download, X, FileCheck, LogOut,
-  UploadCloud, PieChart, UserCircle, Loader2
+  UploadCloud, PieChart, UserCircle, Loader2, Link2, Files
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 // URL GOOGLE APPS SCRIPT BAPAK
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw-iRlRHbT4r2J6hFzxU9WwOWJgwVv3bHEDQp85XpSz4Up1IcCOJ1XrFj3dPtQIyc_wpw/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzcCJAq86ZsIxipm9ujhPf93eTlbXS8wtrvMvFF8aTY8MvrZ5r-FysBBw3lsRoOJpLa0g/exec';
 
 // KONFIGURASI FORM DINAMIS UNTUK SETIAP HALAMAN
 const tabConfig = {
@@ -44,10 +44,7 @@ const tabConfig = {
     type: 'multi',
     icon: <Award className="w-5 h-5 mr-3" />,
     fields: [
-      { 
-        name: 'prodi', label: 'Nama Program Studi', type: 'select', 
-        options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'S1 Gizi'] 
-      },
+      { name: 'prodi', label: 'Nama Program Studi', type: 'select', options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'S1 Gizi'] },
       { name: 'strata', label: 'Strata', type: 'select', options: ['D3', 'D4', 'S1', 'S2', 'S3'] },
       { name: 'peringkat', label: 'Peringkat Akreditasi', type: 'select', options: ['Baik', 'Baik Sekali', 'Terakreditasi', 'Unggul', 'Internasional'] },
       { name: 'masa_berlaku', label: 'Masa Berlaku (Tahun)' },
@@ -88,6 +85,35 @@ const tabConfig = {
       { name: 'skor_kurang', label: 'Jumlah Orang (Kurang)', type: 'number' },
     ] 
   },
+  LinkSurvei: { 
+    type: 'single', // Single row karena hanya 1 konfigurasi kumpulan link
+    icon: <Link2 className="w-5 h-5 mr-3 text-indigo-300" />,
+    fields: [
+      { name: 'link_mahasiswa', label: 'Link Form Survei Mahasiswa (GForm URL)' },
+      { name: 'link_dosen', label: 'Link Form Survei Dosen (GForm URL)' },
+      { name: 'link_tendik', label: 'Link Form Survei Tendik (GForm URL)' },
+      { name: 'link_alumni', label: 'Link Form Survei Alumni (GForm URL)' },
+      { name: 'link_pengguna', label: 'Link Form Pengguna Lulusan (GForm URL)' },
+      { name: 'link_mitra', label: 'Link Form Mitra Kerjasama (GForm URL)' },
+      { name: 'link_keluhan', label: 'Link Form Keluhan Pelanggan (GForm URL)' }
+    ] 
+  },
+  LaporanSurvei: { 
+    type: 'multi',
+    icon: <Files className="w-5 h-5 mr-3 text-teal-300" />,
+    fields: [
+      { name: 'judul_laporan', label: 'Judul Laporan PDF' },
+      { 
+        name: 'kategori', 
+        label: 'Kategori Laporan', 
+        type: 'select', 
+        // DROPDOWN KATEGORI LAPORAN SESUAI PERMINTAAN:
+        options: ['Laporan Kepuasan Mahasiswa', 'Laporan Kepuasan Dosen', 'Laporan Kepuasan Tendik', 'Laporan Kepuasan Alumni', 'Laporan Pengguna Lulusan', 'Laporan Mitra Kerjasama', 'Laporan Keluhan Pelanggan', 'Lain-lain'] 
+      },
+      { name: 'tahun', label: 'Tahun Laporan (Contoh: 2026)', type: 'number' },
+      { name: 'file_url', label: 'Upload Dokumen Laporan (PDF)', type: 'file' }
+    ] 
+  },
   Berita: { 
     type: 'multi',
     icon: <Activity className="w-5 h-5 mr-3" />,
@@ -115,7 +141,6 @@ export default function AdminDashboard() {
   const [uploadFile, setUploadFile] = useState({ base64: null, name: null, mimeType: null });
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
-  // 0. AUTH GUARD (Anti Crash Protection)
   useEffect(() => {
     const userString = localStorage.getItem('userLPM');
     if (!userString) {
@@ -127,7 +152,6 @@ export default function AdminDashboard() {
         setAdminUser(parsedData);
         setIsAuthChecked(true);
       } catch (error) {
-        // Jika data corrupt, bersihkan dan lempar ke login
         localStorage.removeItem('userLPM');
         router.push('/login');
       }
@@ -289,7 +313,7 @@ export default function AdminDashboard() {
             {uploadFile.name && <p className="text-xs text-blue-600 font-medium">File siap diupload: {uploadFile.name}</p>}
           </div>
         ) : (
-          <input type={field.type || 'text'} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value={formData[field.name] || ''} placeholder={field.name.includes('url') ? "https://..." : ""} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita' && field.name !== 'file_url'} />
+          <input type={field.type || 'text'} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value={formData[field.name] || ''} placeholder={field.name.includes('url') || field.name.includes('link') ? "https://..." : ""} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita' && field.name !== 'file_url'} />
         )}
       </div>
     ));
@@ -304,10 +328,10 @@ export default function AdminDashboard() {
           <h2 className="text-2xl font-bold tracking-wider">LPM ADMIN</h2>
           <p className="text-blue-300 text-sm mt-1">Sistem Manajemen Mutu</p>
         </div>
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {Object.keys(tabConfig).map((tabName) => (
             <button key={tabName} onClick={() => setActiveTab(tabName)} className={`w-full flex items-center px-4 py-3 rounded-lg transition duration-200 ${ activeTab === tabName ? 'bg-blue-600 text-white shadow-md' : 'text-blue-100 hover:bg-blue-800 hover:text-white' }`}>
-              {tabConfig[tabName].icon} <span className="font-medium">{tabName}</span>
+              {tabConfig[tabName].icon} <span className="font-medium text-sm">{tabName}</span>
             </button>
           ))}
         </nav>
@@ -397,7 +421,7 @@ export default function AdminDashboard() {
               <div className="mt-8 flex justify-end space-x-3 pt-6 border-t border-gray-100">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Batal</button>
                 <button type="submit" disabled={isLoading} className="flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition disabled:opacity-50">
-                  {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Memproses...</> : activeTab === 'Peraturan' && uploadFile.name ? <><UploadCloud className="w-5 h-5 mr-2" /> Upload & Simpan</> : <><Save className="w-5 h-5 mr-2" /> Simpan Data</>}
+                  {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Memproses...</> : ['Peraturan', 'LaporanSurvei'].includes(activeTab) && uploadFile.name ? <><UploadCloud className="w-5 h-5 mr-2" /> Upload & Simpan</> : <><Save className="w-5 h-5 mr-2" /> Simpan Data</>}
                 </button>
               </div>
             </form>

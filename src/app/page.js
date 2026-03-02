@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
-  Menu, X, ChevronRight, Award, BookOpen, FileCheck, 
+  Menu, X, ChevronRight, ChevronDown, Award, BookOpen, FileCheck, 
   Activity, Search, MapPin, Phone, Mail, ExternalLink, ShieldCheck,
   Download, Filter, ChevronLeft, Loader2, Building, Target,
-  FileText, PieChart // Ikon baru untuk Peraturan & Kepuasan
+  FileText, PieChart, Users
 } from 'lucide-react';
 
 // =========================================================================
@@ -16,6 +16,10 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzcCJAq86ZsIx
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // State khusus untuk menu bertingkat di versi Mobile
+  const [mobileSurveiOpen, setMobileSurveiOpen] = useState(false);
+  const [mobileInstrumenOpen, setMobileInstrumenOpen] = useState(false);
+  
   const [currentPage, setCurrentPage] = useState('beranda');
   const [docCategory, setDocCategory] = useState('Semua');
   const [isLoading, setIsLoading] = useState(true);
@@ -28,12 +32,9 @@ export default function Home() {
   const [dataAkreditasi, setDataAkreditasi] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [news, setNews] = useState([]);
-  
-  // State BARU untuk Peraturan & Kepuasan
   const [dataPeraturan, setDataPeraturan] = useState([]);
   const [dataKepuasan, setDataKepuasan] = useState([]);
 
-  // Fungsi untuk mengambil data spesifik berdasarkan halaman yang dibuka
   useEffect(() => {
     const fetchPageData = async () => {
       if (!GOOGLE_SCRIPT_URL) {
@@ -75,13 +76,11 @@ export default function Home() {
           if (Array.isArray(jsonDok)) setDocuments(jsonDok);
         }
         else if (currentPage === 'peraturan' && dataPeraturan.length === 0) {
-          // Fetch untuk Peraturan
           const resPeraturan = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=peraturan`);
           const jsonPeraturan = await resPeraturan.json();
           if (Array.isArray(jsonPeraturan)) setDataPeraturan(jsonPeraturan);
         }
-        else if (currentPage === 'kepuasan' && dataKepuasan.length === 0) {
-          // Fetch untuk Kepuasan
+        else if (currentPage === 'laporan_kepuasan' && dataKepuasan.length === 0) {
           const resKepuasan = await fetch(`${GOOGLE_SCRIPT_URL}?sheet=kepuasan`);
           const jsonKepuasan = await resKepuasan.json();
           if (Array.isArray(jsonKepuasan)) setDataKepuasan(jsonKepuasan);
@@ -107,22 +106,41 @@ export default function Home() {
     setDocCategory(category);
     if(data) setSelectedNews(data);
     setIsMobileMenuOpen(false);
+    // Reset mobile dropdown states
+    setMobileSurveiOpen(false);
+    setMobileInstrumenOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Navigasi dengan tambahan menu baru
-  const navLinks = [
+  // Navigasi Standar (Menu Survei Pelanggan akan kita sisipkan secara khusus di JSX)
+  const navLinksStart = [
     { id: 'beranda', name: 'Beranda' },
     { id: 'profil', name: 'Profil' },
     { id: 'spmi', name: 'SPMI' },
     { id: 'akreditasi', name: 'Akreditasi' },
     { id: 'dokumen', name: 'Dokumen Mutu' },
     { id: 'peraturan', name: 'Peraturan' },
-    { id: 'kepuasan', name: 'Kepuasan Pengguna' },
+  ];
+  
+  const navLinksEnd = [
     { id: 'berita', name: 'Berita & Kegiatan' },
   ];
 
   // ================= KOMPONEN HALAMAN =================
+
+  // Komponen Halaman Sementara (Placeholder) untuk menu yang belum ada databasenya
+  const PlaceholderPage = ({ title }) => (
+    <div className="py-20 bg-gray-50 min-h-[70vh] flex flex-col items-center justify-center px-4 animate-in fade-in">
+      <div className="max-w-2xl w-full bg-white p-10 rounded-2xl shadow-sm border border-gray-100 text-center">
+        <Users className="w-16 h-16 text-blue-500 mx-auto mb-6" />
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">{title}</h1>
+        <p className="text-gray-600 mb-8">Halaman ini sedang dalam tahap pengembangan (Under Construction). Sistem akan segera dihubungkan ke database.</p>
+        <button onClick={() => navigate('beranda')} className="inline-flex items-center px-6 py-3 bg-blue-50 text-blue-600 font-medium rounded-lg hover:bg-blue-100 transition">
+          <ChevronLeft className="w-4 h-4 mr-2" /> Kembali ke Beranda
+        </button>
+      </div>
+    </div>
+  );
 
   const BerandaPage = () => (
     <div className="animate-in fade-in duration-500">
@@ -566,7 +584,7 @@ export default function Home() {
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-12">
             <PieChart className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Laporan Kepuasan Pengguna</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Laporan Kepuasan Pelanggan</h1>
             <p className="text-gray-600 max-w-2xl mx-auto">Hasil evaluasi pengukuran tingkat kepuasan layanan di lingkungan Universitas Sapta Mandiri.</p>
           </div>
 
@@ -639,7 +657,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="bg-white p-10 rounded-xl shadow-sm border border-gray-200 text-center">
-              <p className="text-gray-500">Data laporan kepuasan pengguna tahun ini belum dipublikasikan.</p>
+              <p className="text-gray-500">Data laporan kepuasan pelanggan tahun ini belum dipublikasikan.</p>
             </div>
           )}
         </div>
@@ -719,7 +737,7 @@ export default function Home() {
     );
   };
 
-  // Router sederhana
+  // Router Navigasi Utama
   const renderContent = () => {
     switch(currentPage) {
       case 'beranda': return <BerandaPage />;
@@ -728,7 +746,19 @@ export default function Home() {
       case 'akreditasi': return <AkreditasiPage />;
       case 'dokumen': return <DokumenPage />;
       case 'peraturan': return <PeraturanPage />; 
-      case 'kepuasan': return <KepuasanPage />;   
+      
+      // Routing Baru untuk Menu Pelanggan
+      case 'laporan_kepuasan': return <KepuasanPage />;   
+      case 'form_keluhan': return <PlaceholderPage title="Form Keluhan Pelanggan" />;
+      case 'laporan_survei': return <PlaceholderPage title="Laporan Survei" />;
+      case 'laporan_keluhan': return <PlaceholderPage title="Laporan Keluhan Pelanggan" />;
+      case 'instrumen_mahasiswa': return <PlaceholderPage title="Instrumen Survei Mahasiswa" />;
+      case 'instrumen_dosen': return <PlaceholderPage title="Instrumen Survei Dosen" />;
+      case 'instrumen_tendik': return <PlaceholderPage title="Instrumen Survei Tenaga Kependidikan" />;
+      case 'instrumen_alumni': return <PlaceholderPage title="Instrumen Survei Alumni" />;
+      case 'instrumen_pengguna': return <PlaceholderPage title="Instrumen Pengguna Lulusan" />;
+      case 'instrumen_mitra': return <PlaceholderPage title="Instrumen Mitra Kerjasama" />;
+
       case 'berita': return <BeritaPage />;
       case 'detail_berita': return <DetailBeritaPage />;
       default: return <BerandaPage />;
@@ -768,118 +798,40 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* ======================= DESKTOP NAVIGATION ======================= */}
           <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
-            {navLinks.map((link) => (
+            
+            {/* Bagian Awal Navigasi */}
+            {navLinksStart.map((link) => (
               <button 
                 key={link.id} 
                 onClick={() => navigate(link.id)} 
-                className={`font-semibold transition duration-300 ${currentPage === link.id ? 'text-blue-700 border-b-2 border-blue-700 pb-1' : 'text-gray-600 hover:text-blue-700'}`}
+                className={`font-semibold py-2 transition duration-300 ${currentPage === link.id ? 'text-blue-700 border-b-2 border-blue-700' : 'text-gray-600 hover:text-blue-700'}`}
               >
                 {link.name}
               </button>
             ))}
             
-            {/* Tombol Login Desktop */}
-            <div className="border-l border-gray-300 pl-6 ml-2">
-              <Link href="/login" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition duration-300 flex items-center shadow-sm text-sm">
-                Login Admin
-              </Link>
-            </div>
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden text-gray-600 hover:text-blue-800 p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {/* Mobile Navigation Dropdown */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg z-50">
-            <div className="container mx-auto px-4 py-2 flex flex-col">
-              {navLinks.map((link) => (
-                <button 
-                  key={link.id} 
-                  onClick={() => navigate(link.id)} 
-                  className={`text-left font-semibold py-3 border-b border-gray-50 px-4 ${currentPage === link.id ? 'text-blue-700 bg-blue-50 rounded-lg' : 'text-gray-700 hover:text-blue-700'}`}
-                >
-                  {link.name}
-                </button>
-              ))}
+            {/* ====== MENU DROPDOWN SURVEI PELANGGAN ====== */}
+            <div className="relative group/main">
+              <button className={`font-semibold py-2 flex items-center transition duration-300 ${['laporan_kepuasan', 'form_keluhan', 'laporan_survei', 'laporan_keluhan'].includes(currentPage) || currentPage.startsWith('instrumen_') ? 'text-blue-700 border-b-2 border-blue-700' : 'text-gray-600 hover:text-blue-700'}`}>
+                Survei Pelanggan <ChevronDown className="w-4 h-4 ml-1" />
+              </button>
               
-              {/* Tombol Login Mobile */}
-              <Link href="/login" className="text-center font-bold py-3 mt-2 mb-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition mx-4 shadow-sm">
-                Login Admin
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {/* RENDER KONTEN HALAMAN */}
-      <main className="flex-grow">
-        {renderContent()}
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 pt-16 pb-8 shrink-0 mt-auto">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-            <div>
-              <div className="flex items-center space-x-2 mb-6">
-                 <ShieldCheck className="w-8 h-8 text-white" />
-                 <div>
-                    <h2 className="text-white font-bold text-lg leading-tight">LPM UNIVSM</h2>
-                 </div>
-              </div>
-              <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-                Menjamin penyelenggaraan pendidikan tinggi yang bermutu, terstandar, dan relevan dengan kebutuhan zaman melalui budaya mutu berkelanjutan.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Tautan Cepat</h3>
-              <ul className="space-y-3 text-sm flex flex-col items-start">
-                {navLinks.map(link => (
-                  <button key={`footer-${link.id}`} onClick={() => navigate(link.id)} className="text-left hover:text-blue-400 transition w-fit">{link.name}</button>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Lembaga Terkait</h3>
-              <ul className="space-y-3 text-sm">
-                <li><a href="https://kemdiktisaintek.go.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> Kemendiktisaintek</a></li>
-                <li><a href="https://www.banpt.or.id/direktori/prodi/pencarian_prodi.php" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> BAN-PT</a></li>
-                <li><a href="https://lldikti11.kemdiktisaintek.go.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LLDikti Wilayah XI</a></li>
-                <li><a href="https://laminfokom.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM INFOKOM</a></li>
-                <li><a href="https://lamemba.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMEMBA</a></li>
-                <li><a href="https://lamdik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMDIK</a></li>
-                <li><a href="https://lamptkes.org/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM PT KES</a></li>
-                <li><a href="https://lamteknik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM TEKNIK</a></li>  
-            </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Hubungi Kami</h3>
-              <ul className="space-y-4 text-sm">
-                <li className="flex items-start">
-                  <MapPin className="w-5 h-5 mr-3 text-blue-500 shrink-0" />
-                  <span className="text-gray-400">Kampus C Haur Batu, Kecamatan Paringin, Kabupaten Balangan</span>
-                </li>
-                <li className="flex items-center">
-                  <Phone className="w-5 h-5 mr-3 text-blue-500 shrink-0" />
-                  <span className="text-gray-400">(62) 812 1770 3626</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 mt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-            <p>&copy; {new Date().getFullYear()} Lembaga Penjaminan Mutu - Universitas Sapta Mandiri.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
+              {/* Flyout Menu Level 1 */}
+              <div className="absolute left-0 top-full mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-lg py-2 opacity-0 invisible group-hover/main:opacity-100 group-hover/main:visible transition-all duration-300 z-50">
+                
+                {/* Menu Nested Level 2: Instrumen Survei */}
+                <div className="relative group/sub px-4 py-2 hover:bg-blue-50 cursor-pointer">
+                  <div className="flex justify-between items-center text-sm font-semibold text-gray-700">
+                    Instrumen Survei Pelanggan <ChevronRight className="w-4 h-4" />
+                  </div>
+                  
+                  {/* Flyout Menu Level 2 */}
+                  <div className="absolute left-full top-0 ml-0 w-56 bg-white border border-gray-100 shadow-xl rounded-lg py-2 opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-300">
+                    <button onClick={() => navigate('instrumen_mahasiswa')} className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50">Mahasiswa</button>
+                    <button onClick={() => navigate('instrumen_dosen')} className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50">Dosen</button>
+                    <button onClick={() => navigate('instrumen_tendik')} className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50">Tenaga Kependidikan</button>
+                    <button onClick={() => navigate('instrumen_alumni')} className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50">Alumni</button>
+                    <button onClick={() => navigate('instrumen_pengguna')} className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50">Pengguna Lulusan</button>
+                    <button onClick={() => navigate('instrumen_mitra')} className="block w-full text-left px-4 py-2 text-sm

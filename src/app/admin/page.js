@@ -4,9 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, FileText, Award, BookOpen, Activity, 
-  Plus, Edit, Trash2, Save, Download, X, FileCheck, LogOut 
+  Plus, Edit, Trash2, Save, Download, X, FileCheck, LogOut,
+  UploadCloud, PieChart, UserCircle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+
+// URL GOOGLE APPS SCRIPT BAPAK
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzcCJAq86ZsIxipm9ujhPf93eTlbXS8wtrvMvFF8aTY8MvrZ5r-FysBBw3lsRoOJpLa0g/exec';
 
 // KONFIGURASI FORM DINAMIS UNTUK SETIAP HALAMAN
 const tabConfig = {
@@ -44,7 +48,7 @@ const tabConfig = {
         name: 'prodi', 
         label: 'Nama Program Studi', 
         type: 'select', 
-        options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'D3 Gizi'] 
+        options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'S1 Gizi'] 
       },
       { 
         name: 'strata', 
@@ -78,6 +82,39 @@ const tabConfig = {
       { name: 'url_dokumen', label: 'Link URL Dokumen' }
     ] 
   },
+  Peraturan: { 
+    type: 'multi',
+    icon: <FileText className="w-5 h-5 mr-3 text-blue-300" />,
+    fields: [
+      { name: 'judul_peraturan', label: 'Judul Peraturan' },
+      { 
+        name: 'kategori', 
+        label: 'Kategori', 
+        type: 'select', 
+        options: ['Undang-Undang', 'Peraturan Pemerintah', 'Peraturan Menteri', 'Keputusan Rektor', 'Buku Panduan', 'Lain-lain'] 
+      },
+      { name: 'tanggal', label: 'Tanggal Terbit', type: 'date' },
+      { name: 'file_url', label: 'Upload File Peraturan (PDF/DOC)', type: 'file' }
+    ] 
+  },
+  Kepuasan: { 
+    type: 'multi',
+    icon: <PieChart className="w-5 h-5 mr-3 text-amber-300" />,
+    fields: [
+      { 
+        name: 'jenis_survei', 
+        label: 'Jenis Survei / Sasaran', 
+        type: 'select', 
+        options: ['Mahasiswa', 'Dosen', 'Tenaga Kependidikan', 'Alumni', 'Pengguna Lulusan', 'Mitra Kerjasama'] 
+      },
+      { name: 'tahun', label: 'Tahun Evaluasi (Contoh: 2026)', type: 'number' },
+      { name: 'aspek_penilaian', label: 'Aspek Penilaian (Contoh: Keandalan / Layanan Akademik)' },
+      { name: 'skor_sangat_baik', label: 'Jumlah Orang (Sangat Baik)', type: 'number' },
+      { name: 'skor_baik', label: 'Jumlah Orang (Baik)', type: 'number' },
+      { name: 'skor_cukup', label: 'Jumlah Orang (Cukup)', type: 'number' },
+      { name: 'skor_kurang', label: 'Jumlah Orang (Kurang)', type: 'number' },
+    ] 
+  },
   Berita: { 
     type: 'multi',
     icon: <Activity className="w-5 h-5 mr-3" />,
@@ -106,9 +143,25 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [adminUser, setAdminUser] = useState(null);
+  
+  // State khusus untuk menampung file upload Base64
+  const [uploadFile, setUploadFile] = useState({ base64: null, name: null, mimeType: null });
+
+  // 0. AUTH GUARD (Cek Login dari Local Storage)
+  useEffect(() => {
+    const userString = localStorage.getItem('userLPM');
+    if (!userString) {
+      router.push('/login'); // Lempar ke login jika tidak ada sesi
+    } else {
+      setAdminUser(JSON.parse(userString));
+    }
+  }, [router]);
 
   useEffect(() => {
     fetchData();
+    // Reset file upload setiap kali ganti tab
+    setUploadFile({ base64: null, name: null, mimeType: null });
   }, [activeTab]);
 
   // ==========================================
@@ -117,9 +170,7 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Mengarah ke Master API route tunggal kita
-      const endpoint = `/api/gas?sheet=${activeTab.toLowerCase()}`;
-      const response = await fetch(endpoint);
+      const response = await fetch(`${GAS_URL}?sheet=${activeTab.toLowerCase()}`);
       const result = await response.json();
       
       if (tabConfig[activeTab].type === 'single') {
@@ -129,9 +180,35 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error(`Gagal memuat data ${activeTab}`, error);
-      alert('Gagal mengambil data dari server.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // ==========================================
+  // LOGIKA UPLOAD FILE KE BASE64
+  // ==========================================
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validasi ukuran max 5MB agar script Google Apps tidak timeout
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ukuran file maksimal 5MB!");
+        e.target.value = "";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        // Ambil string Base64 (buang prefix tipe datanya)
+        const base64String = event.target.result.split(',')[1];
+        setUploadFile({
+          base64: base64String,
+          name: file.name,
+          mimeType: file.type
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -146,7 +223,6 @@ export default function AdminDashboard() {
       const isSingle = tabConfig[activeTab].type === 'single';
       const actionType = (isSingle || isEditing) ? 'UPDATE' : 'CREATE';
       
-      // Menggabungkan data form dengan info sheet dan action
       const dataToSave = { 
         ...formData, 
         sheet: activeTab.toLowerCase(),
@@ -154,13 +230,19 @@ export default function AdminDashboard() {
       };
 
       if (!isSingle && !isEditing) {
-         dataToSave.id = Date.now().toString(); // ID Unik untuk data baru
+         dataToSave.id = Date.now().toString(); 
       }
 
-      // Selalu menggunakan metode POST ke Master API
-      const response = await fetch('/api/gas', {
+      // Jika ada file yang sedang diupload (khusus tab Peraturan)
+      if (uploadFile.base64) {
+        dataToSave.file_base64 = uploadFile.base64;
+        dataToSave.file_name = uploadFile.name;
+        dataToSave.file_mimeType = uploadFile.mimeType;
+      }
+
+      const response = await fetch(GAS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Menghindari preflight CORS error
         body: JSON.stringify(dataToSave)
       });
       
@@ -169,6 +251,7 @@ export default function AdminDashboard() {
       if (result.status === 'success') {
          alert(`Data ${activeTab} berhasil disimpan!`);
          setIsModalOpen(false);
+         setUploadFile({ base64: null, name: null, mimeType: null });
          if (!isSingle) setFormData({}); 
          fetchData(); 
       } else {
@@ -176,7 +259,7 @@ export default function AdminDashboard() {
       }
       
     } catch (error) {
-      alert('Terjadi kesalahan jaringan saat menyimpan data.');
+      alert('Terjadi kesalahan jaringan saat menyimpan data. Periksa koneksi atau URL GAS.');
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -197,10 +280,9 @@ export default function AdminDashboard() {
         id: id
       };
 
-      // Selalu menggunakan metode POST ke Master API
-      const response = await fetch('/api/gas', {
+      const response = await fetch(GAS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
 
@@ -236,18 +318,21 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     if (window.confirm('Apakah Anda yakin ingin keluar dari halaman admin?')) {
+      localStorage.removeItem('userLPM'); // Hapus sesi login
       router.push('/login'); 
     }
   };
 
   const openAddModal = () => {
     setFormData({});
+    setUploadFile({ base64: null, name: null, mimeType: null });
     setIsEditing(false);
     setIsModalOpen(true);
   };
 
   const openEditModal = (item) => {
     setFormData(item);
+    setUploadFile({ base64: null, name: null, mimeType: null });
     setIsEditing(true);
     setIsModalOpen(true);
   };
@@ -257,6 +342,7 @@ export default function AdminDashboard() {
       <div key={field.name} className="mb-4">
         <label className="block text-sm font-semibold text-gray-700 mb-2">{field.label}</label>
         
+        {/* Khusus preview gambar jika field berkaitan dengan URL gambar */}
         {(field.name === 'url_foto_profil' || field.name === 'gambar_bg' || field.name === 'gambar_url') && formData[field.name] && (
           <div className="mb-3 p-2 bg-gray-50 rounded-lg border border-gray-200 inline-block">
             <img 
@@ -275,7 +361,7 @@ export default function AdminDashboard() {
             onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
             required
           >
-            <option value="" disabled>-- Pilih {field.label} --</option>
+            <option value="" disabled>-- Pilih {field.label.split('(')[0]} --</option>
             {field.options.map(opt => (
               <option key={opt} value={opt}>{opt}</option>
             ))}
@@ -286,8 +372,24 @@ export default function AdminDashboard() {
             rows="4"
             value={formData[field.name] || ''}
             onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-            required={field.name !== 'url_foto_profil'} 
+            required={field.name !== 'url_foto_profil' && field.name !== 'url_berita'} 
           />
+        ) : field.type === 'file' ? (
+          <div className="flex flex-col space-y-2">
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              className="w-full p-2 border border-gray-300 rounded-lg bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              onChange={handleFileChange}
+              required={!isEditing && !formData[field.name]} // Wajib saat create
+            />
+            {isEditing && formData[field.name] && !uploadFile.name && (
+              <p className="text-xs text-green-600">File sudah ada di sistem. Upload file baru jika ingin mengganti.</p>
+            )}
+            {uploadFile.name && (
+              <p className="text-xs text-blue-600 font-medium">File siap diupload: {uploadFile.name}</p>
+            )}
+          </div>
         ) : (
           <input
             type={field.type || 'text'}
@@ -295,7 +397,7 @@ export default function AdminDashboard() {
             value={formData[field.name] || ''}
             placeholder={field.name.includes('url') ? "https://..." : ""}
             onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
-            required={field.name !== 'url_foto_profil'} 
+            required={field.name !== 'url_foto_profil' && field.name !== 'url_berita' && field.name !== 'file_url'} 
           />
         )}
       </div>
@@ -305,6 +407,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
       
+      {/* SIDEBAR */}
       <aside className="w-full md:w-64 bg-blue-900 text-white flex flex-col shrink-0 shadow-xl z-10 md:min-h-screen">
         <div className="p-6 border-b border-blue-800">
           <h2 className="text-2xl font-bold tracking-wider">LPM ADMIN</h2>
@@ -328,6 +431,17 @@ export default function AdminDashboard() {
           ))}
         </nav>
 
+        {/* Profil Akun Login */}
+        {adminUser && (
+          <div className="p-4 border-t border-blue-800 bg-blue-950 flex items-center">
+            <UserCircle className="w-8 h-8 text-blue-300 mr-3" />
+            <div>
+              <p className="text-xs text-blue-400 font-medium uppercase tracking-wider">Masuk sebagai</p>
+              <p className="text-sm font-bold truncate max-w-[150px]">{adminUser.nama}</p>
+            </div>
+          </div>
+        )}
+
         <div className="p-4 border-t border-blue-800">
           <button
             onClick={handleLogout}
@@ -339,6 +453,7 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
+      {/* KONTEN UTAMA */}
       <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div>
@@ -364,15 +479,15 @@ export default function AdminDashboard() {
           )}
         </header>
 
-        {isLoading && <div className="text-blue-600 font-semibold my-4 animate-pulse">Memuat data...</div>}
+        {isLoading && <div className="text-blue-600 font-semibold my-4 animate-pulse flex items-center"><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Memuat data...</div>}
 
-        {/* SINGLE ROW */}
+        {/* ======================= RENDER SINGLE ROW (Beranda, Profil, SPMI) ======================= */}
         {tabConfig[activeTab].type === 'single' && !isLoading && (
           <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
             <form onSubmit={handleSave}>
               {renderFormInputs()}
               <div className="mt-8 flex justify-end">
-                <button type="submit" className="flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md transition">
+                <button type="submit" disabled={isLoading} className="flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md transition disabled:opacity-50">
                   <Save className="w-5 h-5 mr-2" /> Simpan Perubahan
                 </button>
               </div>
@@ -380,17 +495,18 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* MULTI ROW */}
+        {/* ======================= RENDER MULTI ROW (Tabel Data) ======================= */}
         {tabConfig[activeTab].type === 'multi' && !isLoading && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200 text-gray-700 text-sm font-semibold uppercase tracking-wider">
+                    {/* Ambil maksimal 4 field pertama untuk ditampilkan di tabel agar tidak terlalu padat */}
                     {tabConfig[activeTab].fields.slice(0, 4).map(field => ( 
-                      <th key={field.name} className="p-4">{field.label}</th>
+                      <th key={field.name} className="p-4">{field.label.split('(')[0]}</th> // Potong teks dalam kurung agar header lebih rapi
                     ))}
-                    <th className="p-4 text-center">Aksi</th>
+                    <th className="p-4 text-center w-32">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -398,14 +514,14 @@ export default function AdminDashboard() {
                     <tr key={item.id || idx} className="hover:bg-gray-50 transition">
                       {tabConfig[activeTab].fields.slice(0, 4).map(field => (
                         <td key={field.name} className="p-4 text-gray-700 truncate max-w-[200px]">
-                          {item[field.name]}
+                          {item[field.name] || '-'}
                         </td>
                       ))}
                       <td className="p-4 text-center flex justify-center space-x-2">
-                        <button onClick={() => openEditModal(item)} className="p-2 text-blue-600 hover:bg-blue-50 rounded transition" title="Edit">
+                        <button onClick={() => openEditModal(item)} className="p-2 text-blue-600 hover:bg-blue-50 rounded transition" title="Edit Data">
                           <Edit className="w-5 h-5" />
                         </button>
-                        <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition" title="Hapus">
+                        <button onClick={() => handleDelete(item.id)} className="p-2 text-red-600 hover:bg-red-50 rounded transition" title="Hapus Data">
                           <Trash2 className="w-5 h-5" />
                         </button>
                       </td>
@@ -413,7 +529,7 @@ export default function AdminDashboard() {
                   )) : (
                     <tr>
                       <td colSpan="5" className="p-8 text-center text-gray-500">
-                        Belum ada data {activeTab}. Silakan klik "Tambah Data".
+                        Belum ada data di menu {activeTab}. Silakan klik "Tambah Data".
                       </td>
                     </tr>
                   )}
@@ -424,27 +540,33 @@ export default function AdminDashboard() {
         )}
       </main>
 
-      {/* MODAL */}
+      {/* ======================= MODAL POP-UP TAMBAH/EDIT DATA ======================= */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex justify-between items-center z-10">
               <h2 className="text-xl font-bold text-gray-800">
                 {isEditing ? 'Edit Data' : 'Tambah Data'} {activeTab}
               </h2>
-              <button type="button" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition p-2 hover:bg-gray-100 rounded-full">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
             <form onSubmit={handleSave} className="p-6">
               {renderFormInputs()}
-              <div className="mt-8 flex justify-end space-x-3">
+              <div className="mt-8 flex justify-end space-x-3 pt-6 border-t border-gray-100">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium transition">
                   Batal
                 </button>
                 <button type="submit" disabled={isLoading} className="flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm transition disabled:opacity-50">
-                  <Save className="w-5 h-5 mr-2" /> {isLoading ? 'Menyimpan...' : 'Simpan Data'}
+                  {isLoading ? (
+                     <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Memproses...</>
+                  ) : activeTab === 'Peraturan' && uploadFile.name ? (
+                     <><UploadCloud className="w-5 h-5 mr-2" /> Upload & Simpan</>
+                  ) : (
+                     <><Save className="w-5 h-5 mr-2" /> Simpan Data</>
+                  )}
                 </button>
               </div>
             </form>

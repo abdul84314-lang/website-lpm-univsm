@@ -10,7 +10,7 @@ import {
 import * as XLSX from 'xlsx';
 
 // URL GOOGLE APPS SCRIPT BAPAK
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzcCJAq86ZsIxipm9ujhPf93eTlbXS8wtrvMvFF8aTY8MvrZ5r-FysBBw3lsRoOJpLa0g/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzK-2pXevSedtARkbXONemgGn3OtivFTtf4Zbh2xnMORpPUot79zt1mQNGpi6uWR3yfmA/exec';
 
 // KONFIGURASI FORM DINAMIS UNTUK SETIAP HALAMAN
 const tabConfig = {

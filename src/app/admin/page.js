@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbw-iRlRHbT4r2J6hFzxU9WwOWJgwVv3bHEDQp85XpSz4Up1IcCOJ1XrFj3dPtQIyc_wpw/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZX2lbsA69zEV1VzNYk_8lOaiXdqT6xVWog8GB3Q8VAgQmLRWS2abPjUfO--Cil6okHA/exec';
 
 const tabConfig = {
   Beranda: { 

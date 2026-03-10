@@ -9,10 +9,8 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-// URL GOOGLE APPS SCRIPT BAPAK
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzcCJAq86ZsIxipm9ujhPf93eTlbXS8wtrvMvFF8aTY8MvrZ5r-FysBBw3lsRoOJpLa0g/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw-iRlRHbT4r2J6hFzxU9WwOWJgwVv3bHEDQp85XpSz4Up1IcCOJ1XrFj3dPtQIyc_wpw/exec';
 
-// KONFIGURASI FORM DINAMIS UNTUK SETIAP HALAMAN
 const tabConfig = {
   Beranda: { 
     type: 'single', 
@@ -69,21 +67,21 @@ const tabConfig = {
       { name: 'judul_peraturan', label: 'Judul Peraturan' },
       { name: 'kategori', label: 'Kategori', type: 'select', options: ['Undang-Undang', 'Peraturan Pemerintah', 'Peraturan Menteri', 'Keputusan Rektor', 'Buku Panduan', 'Lain-lain'] },
       { name: 'tanggal', label: 'Tanggal Terbit', type: 'date' },
-      // SUDAH DIUBAH MENJADI INPUT TEKS (LINK)
-      { name: 'file_url', label: 'Link URL File Peraturan (Google Drive/PDF)' } 
+      { name: 'file_url', label: 'Link URL File Peraturan (Google Drive/PDF)' }
     ] 
   },
+  // ===== PERBAIKAN NAMA KOLOM KEPUASAN AGAR TIDAK BINGUNG =====
   Kepuasan: { 
     type: 'multi',
     icon: <PieChart className="w-5 h-5 mr-3 text-amber-300" />,
     fields: [
-      { name: 'jenis_survei', label: 'Jenis Survei / Sasaran', type: 'select', options: ['Mahasiswa', 'Dosen', 'Tenaga Kependidikan', 'Alumni', 'Pengguna Lulusan', 'Mitra Kerjasama'] },
-      { name: 'tahun', label: 'Tahun Evaluasi (Contoh: 2026)', type: 'number' },
-      { name: 'aspek_penilaian', label: 'Aspek Penilaian (Contoh: Layanan Akademik)' },
-      { name: 'skor_sangat_baik', label: 'Jumlah Orang (Sangat Baik)', type: 'number' },
-      { name: 'skor_baik', label: 'Jumlah Orang (Baik)', type: 'number' },
-      { name: 'skor_cukup', label: 'Jumlah Orang (Cukup)', type: 'number' },
-      { name: 'skor_kurang', label: 'Jumlah Orang (Kurang)', type: 'number' },
+      { name: 'jenis_survei', label: 'Sasaran Survei', type: 'select', options: ['Mahasiswa', 'Dosen', 'Tenaga Kependidikan', 'Alumni', 'Pengguna Lulusan', 'Mitra Kerjasama'] },
+      { name: 'aspek_penilaian', label: 'Aspek Penilaian' },
+      { name: 'skor_sangat_baik', label: 'Sangat Baik', type: 'number' },
+      { name: 'skor_baik', label: 'Baik', type: 'number' },
+      { name: 'skor_cukup', label: 'Cukup', type: 'number' },
+      { name: 'skor_kurang', label: 'Kurang', type: 'number' },
+      { name: 'tahun', label: 'Tahun', type: 'number' },
     ] 
   },
   LinkSurvei: { 
@@ -111,8 +109,7 @@ const tabConfig = {
         options: ['Laporan Kepuasan Mahasiswa', 'Laporan Kepuasan Dosen', 'Laporan Kepuasan Tendik', 'Laporan Kepuasan Alumni', 'Laporan Pengguna Lulusan', 'Laporan Mitra Kerjasama', 'Laporan Keluhan Pelanggan', 'Lain-lain'] 
       },
       { name: 'tahun', label: 'Tahun Laporan (Contoh: 2026)', type: 'number' },
-      // SUDAH DIUBAH MENJADI INPUT TEKS (LINK)
-      { name: 'file_url', label: 'Link URL Dokumen Laporan (Google Drive/PDF)' } 
+      { name: 'file_url', label: 'Link URL Dokumen Laporan (Google Drive/PDF)' }
     ] 
   },
   Berita: { 
@@ -276,13 +273,13 @@ export default function AdminDashboard() {
 
         {field.type === 'select' ? (
           <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white" value={formData[field.name] || ''} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required>
-            <option value="" disabled>-- Pilih {field.label.split('(')[0]} --</option>
+            <option value="" disabled>-- Pilih {field.label} --</option>
             {field.options.map(opt => ( <option key={opt} value={opt}>{opt}</option> ))}
           </select>
         ) : field.type === 'textarea' ? (
           <textarea className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="4" value={formData[field.name] || ''} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita'} />
         ) : (
-          <input type={field.type || 'text'} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value={formData[field.name] || ''} placeholder={field.name.includes('url') || field.name.includes('link') ? "https://..." : ""} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita' && field.name !== 'file_url'} />
+          <input type={field.type || 'text'} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value={formData[field.name] || ''} placeholder={field.name.includes('url') || field.name.includes('link') ? "https://..." : ""} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita' && field.name !== 'file_url' && field.name !== 'skor_sangat_baik' && field.name !== 'skor_baik' && field.name !== 'skor_cukup' && field.name !== 'skor_kurang'} />
         )}
       </div>
     ));
@@ -353,7 +350,10 @@ export default function AdminDashboard() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200 text-gray-700 text-sm font-semibold uppercase tracking-wider">
-                    {tabConfig[activeTab].fields.slice(0, 4).map(field => ( <th key={field.name} className="p-4">{field.label.split('(')[0]}</th> ))}
+                    {/* PERBAIKAN: Hapus fungsi potong kata (split) agar tampil sempurna */}
+                    {tabConfig[activeTab].fields.slice(0, 4).map(field => ( 
+                      <th key={field.name} className="p-4">{field.label}</th> 
+                    ))}
                     <th className="p-4 text-center w-32">Aksi</th>
                   </tr>
                 </thead>

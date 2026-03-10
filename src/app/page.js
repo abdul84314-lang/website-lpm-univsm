@@ -77,9 +77,9 @@ export default function Home() {
       }
     };
 
-    // Ambil link survei secara diam-diam (silent) agar siap saat menu diklik
+    // PERBAIKAN: Pakai 'linksurvei' tanpa garis bawah
     if (Object.keys(dataLinkSurvei).length === 0) {
-      fetchWithCache('link_survei', (data) => {
+      fetchWithCache('linksurvei', (data) => {
         if (Array.isArray(data) && data.length > 0) setDataLinkSurvei(data[0]);
         else if (!Array.isArray(data) && data) setDataLinkSurvei(data);
       }, false);
@@ -111,7 +111,8 @@ export default function Home() {
         break;
       case 'laporan_survei':
       case 'laporan_keluhan':
-        if (dataLaporanSurvei.length === 0) fetchWithCache('laporan_survei', setDataLaporanSurvei, true);
+        // PERBAIKAN: Pakai 'laporansurvei' tanpa garis bawah
+        if (dataLaporanSurvei.length === 0) fetchWithCache('laporansurvei', setDataLaporanSurvei, true);
         break;
       case 'berita':
         if (news.length === 0) fetchWithCache('berita', setNews, true);
@@ -641,7 +642,6 @@ export default function Home() {
     );
   };
 
-  // ================= ROUTING UTAMA =================
   const renderContent = () => {
     switch(currentPage) {
       case 'beranda': return <BerandaPage />;

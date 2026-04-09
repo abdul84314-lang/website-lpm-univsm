@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZX2lbsA69zEV1VzNYk_8lOaiXdqT6xVWog8GB3Q8VAgQmLRWS2abPjUfO--Cil6okHA/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw-iRlRHbT4r2J6hFzxU9WwOWJgwVv3bHEDQp85XpSz4Up1IcCOJ1XrFj3dPtQIyc_wpw/exec';
 
 const tabConfig = {
   Beranda: { 
@@ -35,7 +35,9 @@ const tabConfig = {
     type: 'single',
     icon: <BookOpen className="w-5 h-5 mr-3" />,
     fields: [
-      { name: 'deskripsi_spmi', label: 'Deskripsi Pelaksanaan SPMI', type: 'textarea' }
+      { name: 'deskripsi_spmi', label: 'Deskripsi Pelaksanaan SPMI', type: 'textarea' },
+      // DIKEMBALIKAN KE MODE TIPE FILE AGAR BISA UPLOAD DARI LAPTOP LOKAL
+      { name: 'file_url', label: 'Upload Dokumen Pendukung SPMI (PDF/DOC)', type: 'file' }
     ] 
   },
   Akreditasi: { 
@@ -70,7 +72,6 @@ const tabConfig = {
       { name: 'file_url', label: 'Link URL File Peraturan (Google Drive/PDF)' }
     ] 
   },
-  // ===== PERBAIKAN NAMA KOLOM KEPUASAN AGAR TIDAK BINGUNG =====
   Kepuasan: { 
     type: 'multi',
     icon: <PieChart className="w-5 h-5 mr-3 text-amber-300" />,
@@ -136,6 +137,8 @@ export default function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
+  // DIAKTIFKAN KEMBALI KHUSUS UNTUK UPLOAD SPMI
+  const [uploadFile, setUploadFile] = useState({ base64: null, name: null, mimeType: null });
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
@@ -158,6 +161,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isAuthChecked) {
       fetchData();
+      setUploadFile({ base64: null, name: null, mimeType: null });
     }
   }, [activeTab, isAuthChecked]);
 
@@ -179,6 +183,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Ukuran file maksimal 5MB!");
+        e.target.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64String = event.target.result.split(',')[1];
+        setUploadFile({ base64: base64String, name: file.name, mimeType: file.type });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -191,6 +212,13 @@ export default function AdminDashboard() {
 
       if (!isSingle && !isEditing) dataToSave.id = Date.now().toString(); 
 
+      // KHUSUS SPMI: SISIPKAN DATA BASE64 JIKA ADA FILE
+      if (uploadFile.base64) {
+        dataToSave.file_base64 = uploadFile.base64;
+        dataToSave.file_name = uploadFile.name;
+        dataToSave.file_mimeType = uploadFile.mimeType;
+      }
+
       const response = await fetch(GAS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -202,6 +230,7 @@ export default function AdminDashboard() {
       if (result.status === 'success') {
          alert(`Data ${activeTab} berhasil disimpan!`);
          setIsModalOpen(false);
+         setUploadFile({ base64: null, name: null, mimeType: null });
          if (!isSingle) setFormData({}); 
          fetchData(); 
       } else {
@@ -257,8 +286,8 @@ export default function AdminDashboard() {
     }
   };
 
-  const openAddModal = () => { setFormData({}); setIsEditing(false); setIsModalOpen(true); };
-  const openEditModal = (item) => { setFormData(item); setIsEditing(true); setIsModalOpen(true); };
+  const openAddModal = () => { setFormData({}); setUploadFile({ base64: null, name: null, mimeType: null }); setIsEditing(false); setIsModalOpen(true); };
+  const openEditModal = (item) => { setFormData(item); setUploadFile({ base64: null, name: null, mimeType: null }); setIsEditing(true); setIsModalOpen(true); };
 
   const renderFormInputs = () => {
     return tabConfig[activeTab].fields.map((field) => (
@@ -273,13 +302,19 @@ export default function AdminDashboard() {
 
         {field.type === 'select' ? (
           <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white" value={formData[field.name] || ''} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required>
-            <option value="" disabled>-- Pilih {field.label} --</option>
+            <option value="" disabled>-- Pilih {field.label.split('(')[0]} --</option>
             {field.options.map(opt => ( <option key={opt} value={opt}>{opt}</option> ))}
           </select>
         ) : field.type === 'textarea' ? (
-          <textarea className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="4" value={formData[field.name] || ''} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita'} />
+          <textarea className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="6" value={formData[field.name] || ''} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita'} />
+        ) : field.type === 'file' ? (
+          <div className="flex flex-col space-y-2">
+            <input type="file" accept=".pdf,.doc,.docx" className="w-full p-2 border border-gray-300 rounded-lg bg-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:bg-blue-50 file:text-blue-700" onChange={handleFileChange} />
+            {formData[field.name] && !uploadFile.name && <p className="text-xs text-green-600">File sudah ada di sistem. Upload file baru jika ingin mengganti.</p>}
+            {uploadFile.name && <p className="text-xs text-blue-600 font-medium">File siap diupload: {uploadFile.name}</p>}
+          </div>
         ) : (
-          <input type={field.type || 'text'} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value={formData[field.name] || ''} placeholder={field.name.includes('url') || field.name.includes('link') ? "https://..." : ""} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita' && field.name !== 'file_url' && field.name !== 'skor_sangat_baik' && field.name !== 'skor_baik' && field.name !== 'skor_cukup' && field.name !== 'skor_kurang'} />
+          <input type={field.type || 'text'} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value={formData[field.name] || ''} placeholder={field.name.includes('url') || field.name.includes('link') ? "https://..." : ""} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita' && field.name !== 'file_url'} />
         )}
       </div>
     ));
@@ -338,7 +373,9 @@ export default function AdminDashboard() {
             <form onSubmit={handleSave}>
               {renderFormInputs()}
               <div className="mt-8 flex justify-end">
-                <button type="submit" disabled={isLoading} className="flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md transition disabled:opacity-50"><Save className="w-5 h-5 mr-2" /> Simpan Perubahan</button>
+                <button type="submit" disabled={isLoading} className="flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md transition disabled:opacity-50">
+                  {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Memproses...</> : activeTab === 'SPMI' && uploadFile.name ? <><UploadCloud className="w-5 h-5 mr-2" /> Upload & Simpan</> : <><Save className="w-5 h-5 mr-2" /> Simpan Perubahan</>}
+                </button>
               </div>
             </form>
           </div>
@@ -350,10 +387,7 @@ export default function AdminDashboard() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200 text-gray-700 text-sm font-semibold uppercase tracking-wider">
-                    {/* PERBAIKAN: Hapus fungsi potong kata (split) agar tampil sempurna */}
-                    {tabConfig[activeTab].fields.slice(0, 4).map(field => ( 
-                      <th key={field.name} className="p-4">{field.label}</th> 
-                    ))}
+                    {tabConfig[activeTab].fields.slice(0, 4).map(field => ( <th key={field.name} className="p-4">{field.label}</th> ))}
                     <th className="p-4 text-center w-32">Aksi</th>
                   </tr>
                 </thead>

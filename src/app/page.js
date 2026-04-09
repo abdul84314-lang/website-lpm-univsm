@@ -12,7 +12,7 @@ import {
 // =========================================================================
 // PENTING: GANTI URL DI BAWAH INI DENGAN URL WEB APP DARI GOOGLE APPS SCRIPT
 // =========================================================================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-iRlRHbT4r2J6hFzxU9WwOWJgwVv3bHEDQp85XpSz4Up1IcCOJ1XrFj3dPtQIyc_wpw/exec"; 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZX2lbsA69zEV1VzNYk_8lOaiXdqT6xVWog8GB3Q8VAgQmLRWS2abPjUfO--Cil6okHA/exec"; 
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -77,7 +77,7 @@ export default function Home() {
       }
     };
 
-    // PERBAIKAN: Pakai 'linksurvei' tanpa garis bawah
+    // Ambil link survei secara diam-diam (silent) agar siap saat menu diklik
     if (Object.keys(dataLinkSurvei).length === 0) {
       fetchWithCache('linksurvei', (data) => {
         if (Array.isArray(data) && data.length > 0) setDataLinkSurvei(data[0]);
@@ -111,7 +111,6 @@ export default function Home() {
         break;
       case 'laporan_survei':
       case 'laporan_keluhan':
-        // PERBAIKAN: Pakai 'laporansurvei' tanpa garis bawah
         if (dataLaporanSurvei.length === 0) fetchWithCache('laporansurvei', setDataLaporanSurvei, true);
         break;
       case 'berita':
@@ -344,13 +343,24 @@ export default function Home() {
         <h1 className="text-4xl font-bold text-gray-900 mb-6">Sistem Penjaminan Mutu Internal (SPMI)</h1>
         {isLoading && Object.keys(dataSPMI).length === 0 ? ( <div className="flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
         ) : (
-          <div className="text-lg text-gray-600 text-left whitespace-pre-wrap leading-relaxed bg-gray-50 p-6 rounded-xl border border-gray-100">
-            {dataSPMI.deskripsi_spmi || "Data deskripsi SPMI belum diisi. Silakan isi melalui halaman admin."}
-          </div>
+          <>
+            <div className="text-lg text-gray-600 text-left whitespace-pre-wrap leading-relaxed bg-gray-50 p-6 rounded-xl border border-gray-100 mb-8">
+              {dataSPMI.deskripsi_spmi || "Data deskripsi SPMI belum diisi. Silakan isi melalui halaman admin."}
+            </div>
+            
+            {/* TOMBOL DOWNLOAD DOKUMEN SPMI */}
+            {dataSPMI.file_url && (
+              <a href={dataSPMI.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-8 py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 mb-8 w-full sm:w-auto">
+                <FileText className="w-6 h-6 mr-3" /> Lihat / Unduh Dokumen SPMI
+              </a>
+            )}
+          </>
         )}
-        <button onClick={() => navigate('beranda')} className="mt-8 inline-flex items-center justify-center px-6 py-3 bg-blue-50 text-blue-600 font-medium rounded-lg hover:bg-blue-100 transition">
-          <ChevronLeft className="w-4 h-4 mr-2" /> Kembali ke Beranda
-        </button>
+        <div className="mt-4 border-t border-gray-100 pt-8 w-full">
+          <button onClick={() => navigate('beranda')} className="inline-flex items-center justify-center px-6 py-3 bg-blue-50 text-blue-600 font-medium rounded-lg hover:bg-blue-100 transition">
+            <ChevronLeft className="w-4 h-4 mr-2" /> Kembali ke Beranda
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -778,9 +788,7 @@ export default function Home() {
                 <li><a href="https://laminfokom.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM INFOKOM</a></li>
                 <li><a href="https://lamemba.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMEMBA</a></li>
                 <li><a href="https://lamdik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMDIK</a></li>
-                <li><a href="https://lamptkes.org//" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM PT KES</a></li>
-                <li><a href="https://lamteknik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM TEKNIK</a></li>        
-          </ul>
+            </ul>
             </div>
             <div>
               <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Hubungi Kami</h3>

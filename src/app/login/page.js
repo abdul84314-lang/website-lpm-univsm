@@ -41,8 +41,10 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-    // URL Google Apps Script Bapak
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzcCJAq86ZsIxipm9ujhPf93eTlbXS8wtrvMvFF8aTY8MvrZ5r-FysBBw3lsRoOJpLa0g/exec'; 
+    // =========================================================================
+    // URL Google Apps Script SUDAH DISESUAIKAN
+    // =========================================================================
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZX2lbsA69zEV1VzNYk_8lOaiXdqT6xVWog8GB3Q8VAgQmLRWS2abPjUfO--Cil6okHA/exec'; 
 
     try {
       // Siapkan paket data (Payload) sesuai format API

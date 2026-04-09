@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
+// ===== URL GAS SUDAH DIPERBARUI =====
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZX2lbsA69zEV1VzNYk_8lOaiXdqT6xVWog8GB3Q8VAgQmLRWS2abPjUfO--Cil6okHA/exec';
 
 const tabConfig = {
@@ -36,7 +37,6 @@ const tabConfig = {
     icon: <BookOpen className="w-5 h-5 mr-3" />,
     fields: [
       { name: 'deskripsi_spmi', label: 'Deskripsi Pelaksanaan SPMI', type: 'textarea' },
-      // DIKEMBALIKAN KE MODE TIPE FILE AGAR BISA UPLOAD DARI LAPTOP LOKAL
       { name: 'file_url', label: 'Upload Dokumen Pendukung SPMI (PDF/DOC)', type: 'file' }
     ] 
   },
@@ -137,7 +137,6 @@ export default function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [adminUser, setAdminUser] = useState(null);
-  // DIAKTIFKAN KEMBALI KHUSUS UNTUK UPLOAD SPMI
   const [uploadFile, setUploadFile] = useState({ base64: null, name: null, mimeType: null });
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
@@ -212,7 +211,6 @@ export default function AdminDashboard() {
 
       if (!isSingle && !isEditing) dataToSave.id = Date.now().toString(); 
 
-      // KHUSUS SPMI: SISIPKAN DATA BASE64 JIKA ADA FILE
       if (uploadFile.base64) {
         dataToSave.file_base64 = uploadFile.base64;
         dataToSave.file_name = uploadFile.name;
@@ -314,7 +312,21 @@ export default function AdminDashboard() {
             {uploadFile.name && <p className="text-xs text-blue-600 font-medium">File siap diupload: {uploadFile.name}</p>}
           </div>
         ) : (
-          <input type={field.type || 'text'} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value={formData[field.name] || ''} placeholder={field.name.includes('url') || field.name.includes('link') ? "https://..." : ""} onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} required={field.name !== 'url_foto_profil' && field.name !== 'url_berita' && field.name !== 'file_url'} />
+          <input 
+            type={field.type || 'text'} 
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+            value={formData[field.name] || ''} 
+            placeholder={field.name.includes('url') || field.name.includes('link') ? "https://..." : ""} 
+            onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} 
+            // PERBAIKAN: Jika ada di tab LinkSurvei, tidak wajib diisi semua
+            required={
+              field.name !== 'url_foto_profil' && 
+              field.name !== 'url_berita' && 
+              field.name !== 'file_url' && 
+              activeTab !== 'LinkSurvei' && 
+              !field.name.includes('skor_')
+            } 
+          />
         )}
       </div>
     ));

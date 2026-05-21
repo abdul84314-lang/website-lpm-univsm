@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-// ===== URL GAS SUDAH DIPERBARUI =====
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzikbzH43irKSoEmNscn_It4XFXcgA6RtlErWdL-nZHwScREiX-coZyxCQetb-B9buwVw/exec';
 
 const tabConfig = {
@@ -171,7 +170,8 @@ export default function AdminDashboard() {
       const result = await response.json();
       
       if (tabConfig[activeTab].type === 'single') {
-        setFormData(result || {});
+        // PERBAIKAN: Pastikan selalu menjadi object meskipun backend membalas dengan array
+        setFormData(Array.isArray(result) ? (result[0] || {}) : (result || {}));
       } else {
         setData(Array.isArray(result) ? result : []);
       }
@@ -209,6 +209,10 @@ export default function AdminDashboard() {
       
       const dataToSave = { ...formData, sheet: activeTab.toLowerCase(), action: actionType };
 
+      // PERBAIKAN BENTURAN: Pastikan ada ID untuk single data
+      if (isSingle && !dataToSave.id) {
+        dataToSave.id = "1";
+      }
       if (!isSingle && !isEditing) dataToSave.id = Date.now().toString(); 
 
       if (uploadFile.base64) {
@@ -318,7 +322,6 @@ export default function AdminDashboard() {
             value={formData[field.name] || ''} 
             placeholder={field.name.includes('url') || field.name.includes('link') ? "https://..." : ""} 
             onChange={(e) => setFormData({...formData, [field.name]: e.target.value})} 
-            // PERBAIKAN: Jika ada di tab LinkSurvei, tidak wajib diisi semua
             required={
               field.name !== 'url_foto_profil' && 
               field.name !== 'url_berita' && 

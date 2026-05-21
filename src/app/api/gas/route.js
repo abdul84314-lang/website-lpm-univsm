@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbz-Yg1meaU9Tne_Pl02wq5M58eR9NK_Jn9RY6qx9gBk9TuaLuvk-0AKs9jjBWv4LyvL7Q/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzikbzH43irKSoEmNscn_It4XFXcgA6RtlErWdL-nZHwScREiX-coZyxCQetb-B9buwVw/exec';
 
 // FUNGSI UNTUK MENGAMBIL DATA (READ)
 export async function GET(request) {

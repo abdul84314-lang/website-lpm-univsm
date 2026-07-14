@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzikbzH43irKSoEmNscn_It4XFXcgA6RtlErWdL-nZHwScREiX-coZyxCQetb-B9buwVw/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZX2lbsA69zEV1VzNYk_8lOaiXdqT6xVWog8GB3Q8VAgQmLRWS2abPjUfO--Cil6okHA/exec';
 
 const tabConfig = {
   Beranda: { 
@@ -43,8 +43,10 @@ const tabConfig = {
     type: 'multi',
     icon: <Award className="w-5 h-5 mr-3" />,
     fields: [
-      { name: 'prodi', label: 'Nama Program Studi', type: 'select', options: ['Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'S1 Gizi'] },
-      { name: 'strata', label: 'Strata', type: 'select', options: ['D3', 'D4', 'S1', 'S2', 'S3'] },
+      // PENAMBAHAN FIELD JENIS AKREDITASI DAN PILIHAN INSTITUSI
+      { name: 'jenis', label: 'Jenis Akreditasi', type: 'select', options: ['Program Studi', 'Perguruan Tinggi'] },
+      { name: 'prodi', label: 'Nama Program Studi / Institusi', type: 'select', options: ['Universitas Sapta Mandiri', 'Teknologi Informasi', 'Sistem Informasi', 'Ilmu Komputer', 'Teknik Sipil', 'Manajemen', 'Pendidikan Guru Sekolah Dasar', 'Hukum', 'S1 Gizi'] },
+      { name: 'strata', label: 'Strata', type: 'select', options: ['-', 'D3', 'D4', 'S1', 'S2', 'S3'] },
       { name: 'peringkat', label: 'Peringkat Akreditasi', type: 'select', options: ['Baik', 'Baik Sekali', 'Terakreditasi', 'Unggul', 'Internasional'] },
       { name: 'masa_berlaku', label: 'Masa Berlaku (Tahun)' },
       { name: 'url_sk', label: 'URL SK Akreditasi (Link Google Drive/PDF)' }
@@ -170,7 +172,6 @@ export default function AdminDashboard() {
       const result = await response.json();
       
       if (tabConfig[activeTab].type === 'single') {
-        // PERBAIKAN: Pastikan selalu menjadi object meskipun backend membalas dengan array
         setFormData(Array.isArray(result) ? (result[0] || {}) : (result || {}));
       } else {
         setData(Array.isArray(result) ? result : []);
@@ -209,7 +210,6 @@ export default function AdminDashboard() {
       
       const dataToSave = { ...formData, sheet: activeTab.toLowerCase(), action: actionType };
 
-      // PERBAIKAN BENTURAN: Pastikan ada ID untuk single data
       if (isSingle && !dataToSave.id) {
         dataToSave.id = "1";
       }

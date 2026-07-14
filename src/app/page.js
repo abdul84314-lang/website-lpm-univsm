@@ -348,7 +348,6 @@ export default function Home() {
               {dataSPMI.deskripsi_spmi || "Data deskripsi SPMI belum diisi. Silakan isi melalui halaman admin."}
             </div>
             
-            {/* TOMBOL DOWNLOAD DOKUMEN SPMI */}
             {dataSPMI.file_url && (
               <a href={dataSPMI.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-8 py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 mb-8 w-full sm:w-auto">
                 <FileText className="w-6 h-6 mr-3" /> Lihat / Unduh Dokumen SPMI
@@ -365,45 +364,97 @@ export default function Home() {
     </div>
   );
 
-  const AkreditasiPage = () => (
-    <div className="py-16 bg-gray-50 min-h-[70vh] animate-in fade-in">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <div className="text-center mb-12">
-          <Award className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Status Akreditasi</h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">Daftar lengkap peringkat akreditasi Program Studi di lingkungan Universitas Sapta Mandiri.</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-blue-900 text-white text-sm uppercase tracking-wider">
-                  <th className="p-4 font-semibold">Program Studi</th><th className="p-4 font-semibold">Strata</th><th className="p-4 font-semibold text-center">Peringkat</th><th className="p-4 font-semibold text-center">Masa Berlaku</th><th className="p-4 font-semibold text-center">Unduh SK</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {isLoading && dataAkreditasi.length === 0 ? (
-                  <tr><td colSpan="5" className="p-8 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2"/> Memuat data akreditasi...</td></tr>
-                ) : dataAkreditasi.length > 0 ? dataAkreditasi.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-blue-50 transition duration-150">
-                    <td className="p-4 font-semibold text-gray-800">{item.prodi}</td><td className="p-4 text-gray-600">{item.strata}</td>
-                    <td className="p-4 text-center">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${ item.peringkat?.toUpperCase() === 'UNGGUL' || item.peringkat === 'A' ? 'bg-green-100 text-green-800' : item.peringkat?.toUpperCase() === 'BAIK SEKALI' || item.peringkat === 'B' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800' }`}>{item.peringkat}</span>
-                    </td>
-                    <td className="p-4 text-center text-gray-600">{item.masa_berlaku}</td>
-                    <td className="p-4 text-center">
-                      {item.url_sk ? ( <a href={item.url_sk} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded inline-flex items-center transition"><Download className="w-4 h-4" /></a>
-                      ) : ( <span className="text-xs text-gray-400">-</span> )}
-                    </td>
-                  </tr>
-                )) : ( <tr><td colSpan="5" className="p-8 text-center text-gray-500">Belum ada data akreditasi yang tersimpan.</td></tr> )}
-              </tbody>
-            </table>
+  // ===== STRUKTUR HALAMAN AKREDITASI BARU (DIBAGI PT & PRODI) =====
+  const AkreditasiPage = () => {
+    const dataPT = dataAkreditasi.filter(item => (item.jenis || "").toLowerCase() === 'perguruan tinggi');
+    const dataProdi = dataAkreditasi.filter(item => (item.jenis || "").toLowerCase() !== 'perguruan tinggi');
+
+    return (
+      <div className="py-16 bg-gray-50 min-h-[70vh] animate-in fade-in">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center mb-12">
+            <Award className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Status Akreditasi</h1>
+            <p className="text-gray-600 max-w-2xl mx-auto">Daftar lengkap peringkat akreditasi Institusi Perguruan Tinggi dan Program Studi di lingkungan Universitas Sapta Mandiri.</p>
           </div>
+
+          {/* BAGIAN 1: AKREDITASI INSTITUSI PERGURUAN TINGGI */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold text-blue-900 mb-4 flex items-center">
+              <Building className="w-6 h-6 mr-2 text-blue-700" /> Akreditasi Perguruan Tinggi (PT)
+            </h2>
+            {dataPT.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {dataPT.map((item, idx) => (
+                  <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">{item.prodi || 'Universitas Sapta Mandiri'}</h3>
+                      <p className="text-sm text-gray-500 mt-1">Masa Berlaku: <span className="font-semibold text-gray-700">{item.masa_berlaku || '-'}</span></p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="px-4 py-2 rounded-full text-sm font-bold bg-green-100 text-green-800">
+                        {item.peringkat}
+                      </span>
+                      {item.url_sk && (
+                        <a href={item.url_sk} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center transition shadow-sm font-semibold text-sm">
+                          <Download className="w-4 h-4 mr-2" /> Unduh SK PT
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white p-8 rounded-xl border border-gray-200 text-center text-gray-500 text-sm">
+                Data akreditasi perguruan tinggi (institusi) belum dipublikasikan.
+              </div>
+            )}
+          </div>
+
+          {/* BAGIAN 2: AKREDITASI PROGRAM STUDI */}
+          <div>
+            <h2 className="text-2xl font-bold text-blue-900 mb-4 flex items-center">
+              <Award className="w-6 h-6 mr-2 text-blue-700" /> Akreditasi Program Studi (Prodi)
+            </h2>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-blue-900 text-white text-sm uppercase tracking-wider">
+                      <th className="p-4 font-semibold">Program Studi</th>
+                      <th className="p-4 font-semibold">Strata</th>
+                      <th className="p-4 font-semibold text-center">Peringkat</th>
+                      <th className="p-4 font-semibold text-center">Masa Berlaku</th>
+                      <th className="p-4 font-semibold text-center">Unduh SK</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {isLoading && dataAkreditasi.length === 0 ? (
+                      <tr><td colSpan="5" className="p-8 text-center text-gray-500"><Loader2 className="w-6 h-6 animate-spin mx-auto mb-2"/> Memuat data akreditasi...</td></tr>
+                    ) : dataProdi.length > 0 ? dataProdi.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-blue-50 transition duration-150">
+                        <td className="p-4 font-semibold text-gray-800">{item.prodi}</td>
+                        <td className="p-4 text-gray-600">{item.strata}</td>
+                        <td className="p-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${ item.peringkat?.toUpperCase() === 'UNGGUL' || item.peringkat === 'A' ? 'bg-green-100 text-green-800' : item.peringkat?.toUpperCase() === 'BAIK SEKALI' || item.peringkat === 'B' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800' }`}>{item.peringkat}</span>
+                        </td>
+                        <td className="p-4 text-center text-gray-600">{item.masa_berlaku}</td>
+                        <td className="p-4 text-center">
+                          {item.url_sk ? ( <a href={item.url_sk} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded inline-flex items-center transition"><Download className="w-4 h-4" /></a>
+                          ) : ( <span className="text-xs text-gray-400">-</span> )}
+                        </td>
+                      </tr>
+                    )) : ( <tr><td colSpan="5" className="p-8 text-center text-gray-500">Belum ada data akreditasi prodi yang tersimpan.</td></tr> )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const DokumenPage = () => {
     const categories = ['Semua', 'Penetapan', 'Pelaksanaan', 'Evaluasi', 'Pengendalian', 'Peningkatan'];
@@ -788,7 +839,9 @@ export default function Home() {
                 <li><a href="https://laminfokom.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM INFOKOM</a></li>
                 <li><a href="https://lamemba.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMEMBA</a></li>
                 <li><a href="https://lamdik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAMDIK</a></li>
-            </ul>
+                <li><a href="https://lamptkes.org//" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM PT KES</a></li>
+                <li><a href="https://lamteknik.or.id/" className="hover:text-blue-400 transition flex items-center"><ExternalLink className="w-4 h-4 mr-2" /> LAM TEKNIK</a></li>        
+          </ul>
             </div>
             <div>
               <h3 className="text-white font-bold mb-6 uppercase text-sm tracking-wider">Hubungi Kami</h3>

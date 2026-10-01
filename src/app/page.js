@@ -21,7 +21,7 @@ export default function Home() {
   const [selectedNews, setSelectedNews] = useState(null);
 
   // State untuk menyimpan data masing-masing halaman dari Spreadsheet
-  const [dataBeranda, setDataBeranda] = useState({});
+  const [dataBeranda, setDataBeranda] = useState({}); 
   const [dataProfil, setDataProfil] = useState({});
   const [dataSPMI, setDataSPMI] = useState({});
   const [dataAkreditasi, setDataAkreditasi] = useState([]);
@@ -143,7 +143,7 @@ export default function Home() {
               <div className="text-center">
                 <Award className="w-16 h-16 text-amber-500 mx-auto mb-3" />
                 <h3 className="text-gray-800 font-bold text-xl mb-1">Akreditasi Institusi</h3>
-                <div className="text-3xl font-extrabold text-blue-900 mb-2">UNGGUL</div>
+                <div className="text-3xl font-extrabold text-blue-900 mb-2">TERAKREDITASI</div>
                 <p className="text-gray-500 text-sm mb-4">Badan Akreditasi Nasional (BAN-PT)</p>
                 <button onClick={() => navigate('akreditasi')} className="text-blue-600 font-medium text-sm flex items-center justify-center w-full hover:underline">
                   Lihat Detail Akreditasi <ChevronRight className="w-4 h-4 ml-1" />

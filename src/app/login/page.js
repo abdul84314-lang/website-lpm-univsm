@@ -41,25 +41,63 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-    // Simulasi proses ke API backend (delay 1.5 detik)
-    setTimeout(() => {
-      if (isRegister) {
-        // Simulasi berhasil daftar
-        setSuccessMsg('Pendaftaran berhasil! Silakan masuk menggunakan akun baru Anda.');
-        setIsRegister(false); // Kembalikan ke mode login
-        setPassword('');
-        setConfirmPassword('');
-        setIsLoading(false);
-      } else {
-        // Simulasi proses login
-        if (email === 'admin@univsm.ac.id' && password === 'admin123') {
-          router.push('/admin');
+    // =========================================================================
+    // URL Google Apps Script SUDAH DISESUAIKAN
+    // =========================================================================
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwZX2lbsA69zEV1VzNYk_8lOaiXdqT6xVWog8GB3Q8VAgQmLRWS2abPjUfO--Cil6okHA/exec'; 
+
+    try {
+      // Siapkan paket data (Payload) sesuai format API
+      const payload = isRegister 
+        ? {
+            sheet: 'Users',
+            action: 'REGISTER',
+            username: email,   // Menggunakan email sebagai username
+            password: password,
+            nama: name
+          }
+        : {
+            sheet: 'Users',
+            action: 'LOGIN',
+            username: email,
+            password: password
+          };
+
+      // Tembak API ke Google Apps Script
+      const response = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: {
+          // Menggunakan text/plain agar GAS tidak memicu error preflight CORS
+          'Content-Type': 'text/plain;charset=utf-8',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        if (isRegister) {
+          setSuccessMsg(result.message);
+          setIsRegister(false); // Kembalikan form ke mode login
+          setPassword('');
+          setConfirmPassword('');
         } else {
-          setError('Email atau password salah! (Gunakan: admin@univsm.ac.id / admin123)');
-          setIsLoading(false);
+          // Jika Login sukses, simpan data user ke penyimpanan lokal browser
+          localStorage.setItem('userLPM', JSON.stringify(result.user));
+          
+          // Lempar ke halaman admin
+          router.push('/admin');
         }
+      } else {
+        // Jika API membalas dengan status error (contoh: password salah / email sudah terdaftar)
+        setError(result.message);
       }
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      setError('Terjadi kesalahan koneksi ke server. Silakan coba lagi.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleMode = () => {

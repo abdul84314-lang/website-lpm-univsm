@@ -1,75 +1,97 @@
 import { NextResponse } from 'next/server';
 
-// Menggunakan API ID SheetDB Anda: xjth2jttyy0dw
-const SHEETDB_API_ID = 'xjth2jttyy0dw'; 
-const SHEET_URL = `https://sheetdb.io/api/v1/${SHEETDB_API_ID}`;
+// PENTING: Ganti dengan URL Web App Google Apps Script Anda yang TERBARU
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz-Yg1meaU9Tne_Pl02wq5M58eR9NK_Jn9RY6qx9gBk9TuaLuvk-0AKs9jjBWv4LyvL7Q/exec'; 
 
-// MENGAMBIL DATA DOKUMEN (READ)
+// 1. MENGAMBIL DATA dokumen (READ)
 export async function GET() {
   try {
-    // Memanggil data dari tab 'Dokumen'
-    const response = await fetch(`${SHEET_URL}?sheet=Dokumen`, {
-      cache: 'no-store'
+    // Memanggil parameter ?sheet=dokumen
+    const response = await fetch(`${GAS_URL}?sheet=dokumen`, {
+      cache: 'no-store' 
     });
     
-    if (!response.ok) {
-      throw new Error('Gagal menghubungi SheetDB untuk data Dokumen');
-    }
-
-    const data = await response.json();
-
-    /**
-     * MAPPING DATA:
-     * Menyesuaikan nama kolom dari Google Sheets (Bahasa Indonesia)
-     * ke nama properti yang dibutuhkan oleh frontend page.js
-     */
-    const formattedData = data.map(item => ({
-      id: item.id,
-      title: item.nama_dokumen,    // Kolom Sheets: nama_dokumen
-      category: item.kategori_ppepp, // Kolom Sheets: kategori_ppepp
-      type: item.tipe_file,        // Kolom Sheets: tipe_file
-      size: item.ukuran,           // Kolom Sheets: ukuran
-      url: item.url_dokumen        // Kolom Sheets: url_dokumen
-    }));
-
-    return NextResponse.json(formattedData);
+    const news = await response.json();
+    return NextResponse.json(news);
+    
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Gagal mengambil data dokumen' }, { status: 500 });
   }
 }
 
-// MENAMBAH DATA DOKUMEN (CREATE)
+// 2. MENAMBAH DATA dokumen BARU (CREATE)
 export async function POST(request) {
   try {
-    const body = await request.json();
+    const newData = await request.json();
     
-    /**
-     * SESUAIKAN INPUT:
-     * Mengubah data dari format frontend ke nama kolom Google Sheets
-     * agar tersimpan di kolom yang benar.
-     */
-    const dataBaru = {
-      id: body.id || Date.now().toString(),
-      nama_dokumen: body.title,
-      kategori_ppepp: body.category,
-      tipe_file: body.type,
-      ukuran: body.size,
-      url_dokumen: body.url
-    };
+    // Menambahkan penanda sheet dan aksi untuk GAS
+    newData.sheet = 'dokumen';
+    newData.action = 'CREATE';
 
-    const response = await fetch(`${SHEET_URL}?sheet=Dokumen`, {
+    const response = await fetch(GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: dataBaru })
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Menghindari CORS
+      body: JSON.stringify(newData)
     });
     
-    if (!response.ok) {
-      throw new Error('Gagal menambah data dokumen ke Google Sheets');
-    }
-
     const result = await response.json();
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Gagal menambah data dokumen' }, { status: 500 });
+  }
+}
+
+// 3. MENGUBAH DATA dokumen (UPDATE)
+export async function PUT(request) {
+  try {
+    const updateData = await request.json();
+    
+    // Pastikan ID dokumen yang ingin diedit dikirimkan dari frontend
+    if (!updateData.id) {
+        return NextResponse.json({ error: 'ID wajib disertakan untuk update dokumen' }, { status: 400 });
+    }
+
+    updateData.sheet = 'dokumen';
+    updateData.action = 'UPDATE';
+
+    const response = await fetch(GAS_URL, {
+      method: 'POST', // Komunikasi ke GAS tetap POST
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(updateData)
+    });
+    
+    const result = await response.json();
+    return NextResponse.json(result);
+  } catch (error) {
+    return NextResponse.json({ error: 'Gagal mengubah data dokumen' }, { status: 500 });
+  }
+}
+
+// 4. MENGHAPUS DATA dokumen (DELETE)
+export async function DELETE(request) {
+  try {
+    const { id } = await request.json();
+    
+    // Pastikan ID dokumen yang ingin dihapus dikirimkan
+    if (!id) {
+        return NextResponse.json({ error: 'ID wajib disertakan untuk hapus dokumen' }, { status: 400 });
+    }
+
+    const deleteData = {
+        sheet: 'dokumen',
+        action: 'DELETE',
+        id: id
+    };
+
+    const response = await fetch(GAS_URL, {
+      method: 'POST', 
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(deleteData)
+    });
+    
+    const result = await response.json();
+    return NextResponse.json(result);
+  } catch (error) {
+    return NextResponse.json({ error: 'Gagal menghapus data dokumen' }, { status: 500 });
   }
 }

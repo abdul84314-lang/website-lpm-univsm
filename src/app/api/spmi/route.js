@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 
-const SHEET_URL = 'https://sheetdb.io/api/v1/xjth2jttyy0dw';
+// PENTING: Ganti dengan URL Web App Google Apps Script Anda yang TERBARU
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz-Yg1meaU9Tne_Pl02wq5M58eR9NK_Jn9RY6qx9gBk9TuaLuvk-0AKs9jjBWv4LyvL7Q/exec'; 
 
 // MENGAMBIL DATA SPMI (READ)
 export async function GET() {
   try {
-    const response = await fetch(`${SHEET_URL}?sheet=SPMI`, {
+    // Panggil ?sheet=spmi (huruf kecil)
+    const response = await fetch(`${GAS_URL}?sheet=spmi`, {
       cache: 'no-store'
     });
     const data = await response.json();
@@ -15,15 +17,22 @@ export async function GET() {
   }
 }
 
-// MENGUBAH DATA SPMI (UPDATE) - Hanya mengubah data di baris id=1
+// MENGUBAH DATA SPMI (UPDATE)
 export async function PUT(request) {
   try {
     const updateData = await request.json();
     
-    const response = await fetch(`${SHEET_URL}/id/1?sheet=SPMI`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: updateData })
+    // Tambahkan parameter sheet dan action
+    updateData.sheet = 'spmi';
+    updateData.action = 'UPDATE'; 
+
+    const response = await fetch(GAS_URL, {
+      method: 'POST', // Komunikasi ke GAS selalu POST
+      headers: { 
+        'Content-Type': 'text/plain;charset=utf-8' 
+      },
+      // Kirim data langsung
+      body: JSON.stringify(updateData)
     });
     
     const result = await response.json();
